@@ -1,0 +1,749 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Interactive Map - Vancouver Map for Kids</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#0060A9">
+  <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial}
+    .station:hover{transform:scale(1.12)}
+    .taparea{cursor:pointer}
+    .svg-wrap{min-width:850px}
+    @media (max-width: 640px){ .svg-wrap{min-width:700px} }
+    #schemaSvg { touch-action: pan-x pinch-zoom; }
+    /* Labels */
+    .station-label{ font-size:11px; fill:#111827; font-weight:600; }
+    .label-bg{ fill:#fff; stroke:#e5e7eb; stroke-width:1; rx:3 }
+    /* Transfer stations */
+    .transfer-station{ cursor:pointer; }
+    .transfer-station:hover .station{ transform:scale(1.15); }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+
+  <!-- Header with back button -->
+  <header class="bg-white shadow p-4">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <button onclick="goHome()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+          🏠 <span>Back to Home</span>
+        </button>
+        <div>
+          <h1 class="text-2xl font-bold text-gray-800">Interactive Map</h1>
+          <p class="text-sm text-gray-600">Click on a station for detailed info</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="goToCalculator()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg transition-colors">
+          🧭 Route Calculator
+        </button>
+        <div id="offlineBadge" class="hidden bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+          Working offline
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="p-4">
+    <!-- Interactive schema -->
+    <section class="max-w-6xl mx-auto bg-white rounded-xl shadow-lg p-6 mt-6">
+      <div class="mb-4 text-center">
+        <h2 class="text-xl font-bold text-gray-800 mb-2">Interactive SkyTrain Lines Schema</h2>
+        <p class="text-gray-600">Click on a station to open info. Colors: Expo — blue, Millennium — yellow, Canada — cyan.</p>
+      </div>
+
+      <div class="overflow-auto">
+        <svg id="schemaSvg" class="svg-wrap w-full h-auto" viewBox="0 0 820 1400" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="0" width="820" height="1400" fill="url(#bg)"/>
+          <defs>
+            <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#EFF6FF"/>
+              <stop offset="100%" stop-color="#ECFEFF"/>
+            </linearGradient>
+            <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="1" stdDeviation="1" flood-opacity=".15"/>
+            </filter>
+          </defs>
+
+          <g id="paths"></g>
+          <g id="stations"></g>
+
+          <!-- Legend -->
+          <g id="legend" transform="translate(520,20)" filter="url(#shadow)">
+            <rect width="180" height="110" rx="12" fill="#fff" stroke="#e5e7eb"/>
+            <g transform="translate(20,20)">
+              <!-- Row 1 -->
+              <text x="10" y="10" font-size="13" fill="#111827" text-anchor="start">Expo Line</text>
+              <circle r="7" cx="150" cy="6" fill="#0060A9"/>
+              <!-- Row 2 -->
+              <text x="10" y="40" font-size="13" fill="#111827" text-anchor="start">Millennium Line</text>
+              <circle r="7" cx="150" cy="36" fill="#FED100"/>
+              <!-- Row 3 -->
+              <text x="10" y="70" font-size="13" fill="#111827" text-anchor="start">Canada Line</text>
+              <circle r="7" cx="150" cy="66" fill="#009AC8"/>
+            </g>
+          </g>
+        </svg>
+      </div>
+    </section>
+
+    <!-- Station lists by line -->
+    <section class="px-0 pb-8 mt-6">
+      <div class="max-w-6xl mx-auto space-y-6" id="linesContainer"></div>
+    </section>
+  </main>
+
+  <!-- Station info modal -->
+  <div id="stationModal" class="fixed inset-0 bg-black/50 items-center justify-center p-4 hidden z-50">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-auto">
+      <div class="p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-xl font-bold text-gray-800">Station Information</h3>
+          <button onclick="closeStationInfo()" class="text-gray-500 hover:text-gray-700 text-2xl" aria-label="Close">×</button>
+        </div>
+        <div class="space-y-4" id="stationContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="bg-gray-800 text-white p-6">
+    <div class="max-w-6xl mx-auto text-center">
+      <h3 class="text-lg font-bold mb-2">About the App</h3>
+      <p class="text-gray-300 text-sm mb-4">A free app for kids to learn about the SkyTrain system. All data is stored locally.</p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div class="bg-gray-700 p-3 rounded-lg"><h4 class="font-medium mb-1">3 lines</h4><p class="text-gray-400">Expo, Millennium, Canada</p></div>
+        <div class="bg-gray-700 p-3 rounded-lg"><h4 class="font-medium mb-1">54 stations</h4><p class="text-gray-400">Across the metro</p></div>
+        <div class="bg-gray-700 p-3 rounded-lg"><h4 class="font-medium mb-1">Automated trains</h4><p class="text-gray-400">Driverless</p></div>
+      </div>
+      <div class="mt-6 pt-4 border-t border-gray-600">
+        <p class="text-xs text-gray-400">2025 data • Source: TransLink</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    let enrichedStationsData = {};
+    
+    /* Navigation functions */
+    function goHome() {
+      window.location.href = './index.html';
+    }
+    
+    function goToCalculator() {
+      window.location.href = './calculator.html';
+    }
+
+    /* Service Worker registration */
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(console.error));
+    }
+
+    /* Offline badge */
+    function updateOfflineBadge(){
+      const b = document.getElementById('offlineBadge');
+      if (!navigator.onLine) {
+        b.classList.remove('hidden');
+      } else {
+        b.classList.add('hidden');
+      }
+    }
+    window.addEventListener('online', updateOfflineBadge);
+    window.addEventListener('offline', updateOfflineBadge);
+    updateOfflineBadge();
+
+    async function loadEnrichedStationsData() {
+      try {
+        const response = await fetch('./stations.json');
+        if (response.ok) {
+          enrichedStationsData = await response.json();
+          console.log('Loaded enriched data for', Object.keys(enrichedStationsData).length, 'stations');
+        } else {
+          console.warn('stations.json not found - continuing with basic info');
+        }
+      } catch (error) {
+        console.warn('Error loading enriched station data:', error);
+      }
+    }
+    
+    /* Data: lines & stations */
+    const lines = {
+      expo: {
+        nameHe:'Expo Line', nameEn:'Expo Line', color:'#0060A9',
+        stations:[
+          {id:'waterfront',nameHe:'Waterfront',nameEn:'Waterfront',zone:1,platforms:2,accessibility:true,transfers:['canada','seabus','westcoast'],busLines:['004','007','014']},
+          {id:'burrard',nameHe:'Burrard',nameEn:'Burrard',zone:1,platforms:2,accessibility:true,transfers:[],busLines:['005','006']},
+          {id:'granville',nameHe:'Granville',nameEn:'Granville',zone:1,platforms:2,accessibility:true,transfers:[],busLines:['010','016','050']},
+          {id:'stadium',nameHe:'Stadium–Chinatown',nameEn:'Stadium–Chinatown',zone:1,platforms:2,accessibility:true,transfers:[],busLines:['019','022']},
+          {id:'main-street',nameHe:'Main Street–Science World',nameEn:'Main Street–Science World',zone:1,platforms:2,accessibility:true,transfers:[],busLines:['003','008','019']},
+          {id:'commercial',nameHe:'Commercial–Broadway',nameEn:'Commercial–Broadway',zone:1,platforms:2,accessibility:true,transfers:['millennium'],busLines:['009','020','025']},
+          {id:'nanaimo',nameHe:'Nanaimo',nameEn:'Nanaimo',zone:2,platforms:2,accessibility:true,transfers:[],busLines:['025','029']},
+          {id:'29th-ave',nameHe:'29th Avenue',nameEn:'29th Avenue',zone:2,platforms:2,accessibility:true,transfers:[],busLines:['029']},
+          {id:'joyce',nameHe:'Joyce–Collingwood',nameEn:'Joyce–Collingwood',zone:2,platforms:2,accessibility:true,transfers:[],busLines:['026','027']},
+          {id:'patterson',nameHe:'Patterson',nameEn:'Patterson',zone:2,platforms:2,accessibility:true,transfers:[],busLines:['148']},
+          {id:'metrotown',nameHe:'Metrotown',nameEn:'Metrotown',zone:2,platforms:2,accessibility:true,transfers:[],busLines:['110','116','144']},
+          {id:'royal-oak',nameHe:'Royal Oak',nameEn:'Royal Oak',zone:2,platforms:2,accessibility:true,transfers:[],busLines:['106']},
+          {id:'edmonds',nameHe:'Edmonds',nameEn:'Edmonds',zone:2,platforms:2,accessibility:true,transfers:[],busLines:['106','128']},
+          {id:'22nd-street',nameHe:'22nd Street',nameEn:'22nd Street',zone:2,platforms:2,accessibility:true,transfers:[],busLines:['123']},
+          {id:'new-west',nameHe:'New Westminster',nameEn:'New Westminster',zone:2,platforms:2,accessibility:true,transfers:[],busLines:['155','156','157']},
+          {id:'columbia',nameHe:'Columbia',nameEn:'Columbia',zone:2,platforms:2,accessibility:true,transfers:[],busLines:['155']},
+          {id:'scott-road',nameHe:'Scott Road',nameEn:'Scott Road',zone:2,platforms:2,accessibility:true,transfers:[],busLines:['319','320']},
+          {id:'gateway',nameHe:'Gateway',nameEn:'Gateway',zone:2,platforms:2,accessibility:true,transfers:[],busLines:['319','375']},
+          {id:'surrey-central',nameHe:'Surrey Central',nameEn:'Surrey Central',zone:2,platforms:2,accessibility:true,transfers:[],busLines:['321','335','345']},
+          {id:'king-george',nameHe:'King George',nameEn:'King George',zone:2,platforms:2,accessibility:true,transfers:[],busLines:['321','375']},
+          {id:'sapperton',nameHe:'Sapperton',nameEn:'Sapperton',zone:2,platforms:2,accessibility:true,transfers:[],busLines:['155']},
+          {id:'braid',nameHe:'Braid',nameEn:'Braid',zone:2,platforms:2,accessibility:true,transfers:[],busLines:['155']},
+          {id:'lougheed',nameHe:'Lougheed Town Centre',nameEn:'Lougheed Town Centre',zone:2,platforms:2,accessibility:true,transfers:['millennium'],busLines:['134','136']},
+          {id:'production-way',nameHe:'Production Way–University',nameEn:'Production Way–University',zone:2,platforms:2,accessibility:true,transfers:['millennium'],busLines:['145','169']}
+        ]
+      },
+      millennium: {
+        nameHe:'Millennium Line', nameEn:'Millennium Line', color:'#FED100',
+        stations:[
+          {id:'vcc-clark',nameHe:'VCC–Clark',nameEn:'VCC–Clark',zone:1,platforms:2,accessibility:true,transfers:[],busLines:['020']},
+          {id:'commercial',nameHe:'Commercial–Broadway',nameEn:'Commercial–Broadway',zone:1,platforms:2,accessibility:true,transfers:['expo'],busLines:['009','020','025']},
+          {id:'renfrew',nameHe:'Renfrew',nameEn:'Renfrew',zone:1,platforms:2,accessibility:true,transfers:[],busLines:['016','025']},
+          {id:'rupert',nameHe:'Rupert',nameEn:'Rupert',zone:2,platforms:2,accessibility:true,transfers:[],busLines:['025','027']},
+          {id:'gilmore',nameHe:'Gilmore',nameEn:'Gilmore',zone:2,platforms:2,accessibility:true,transfers:[],busLines:['027']},
+          {id:'brentwood',nameHe:'Brentwood Town Centre',nameEn:'Brentwood Town Centre',zone:2,platforms:2,accessibility:true,transfers:[],busLines:['136','144']},
+          {id:'holdom',nameHe:'Holdom',nameEn:'Holdom',zone:2,platforms:2,accessibility:true,transfers:[],busLines:['136']},
+          {id:'sperling',nameHe:'Sperling–Burnaby Lake',nameEn:'Sperling–Burnaby Lake',zone:2,platforms:2,accessibility:true,transfers:[],busLines:['134','136']},
+          {id:'lake-city-way',nameHe:'Lake City Way',nameEn:'Lake City Way',zone:2,platforms:2,accessibility:true,transfers:[],busLines:['134']},
+          {id:'production-way',nameHe:'Production Way–University',nameEn:'Production Way–University',zone:2,platforms:2,accessibility:true,transfers:['expo'],busLines:['145','169']},
+          {id:'lougheed',nameHe:'Lougheed Town Centre',nameEn:'Lougheed Town Centre',zone:2,platforms:2,accessibility:true,transfers:['expo'],busLines:['134','136']},
+          {id:'burquitlam',nameHe:'Burquitlam',nameEn:'Burquitlam',zone:3,platforms:2,accessibility:true,transfers:[],busLines:['180']},
+          {id:'moody-centre',nameHe:'Moody Centre',nameEn:'Moody Centre',zone:3,platforms:2,accessibility:true,transfers:[],busLines:['183','184']},
+          {id:'inlet-centre',nameHe:'Inlet Centre',nameEn:'Inlet Centre',zone:3,platforms:2,accessibility:true,transfers:[],busLines:['183']},
+          {id:'coquitlam-central',nameHe:'Coquitlam Central',nameEn:'Coquitlam Central',zone:3,platforms:2,accessibility:true,transfers:[],busLines:['159','174','188']},
+          {id:'lincoln',nameHe:'Lincoln',nameEn:'Lincoln',zone:3,platforms:2,accessibility:true,transfers:[],busLines:['174']},
+          {id:'lafarge-lake',nameHe:'Lafarge Lake–Douglas',nameEn:'Lafarge Lake–Douglas',zone:3,platforms:2,accessibility:true,transfers:[],busLines:['174']}
+        ]
+      },
+      canada: {
+        nameHe:'Canada Line', nameEn:'Canada Line', color:'#009AC8',
+        stations:[
+          {id:'waterfront',nameHe:'Waterfront',nameEn:'Waterfront',zone:1,platforms:2,accessibility:true,transfers:['expo','seabus','westcoast'],busLines:['004','007','014']},
+          {id:'vancouver-city-centre',nameHe:'Vancouver City Centre',nameEn:'Vancouver City Centre',zone:1,platforms:2,accessibility:true,transfers:[],busLines:['005','006','010']},
+          {id:'yaletown',nameHe:'Yaletown–Roundhouse',nameEn:'Yaletown–Roundhouse',zone:1,platforms:2,accessibility:true,transfers:[],busLines:['015','050']},
+          {id:'olympic-village',nameHe:'Olympic Village',nameEn:'Olympic Village',zone:1,platforms:2,accessibility:true,transfers:[],busLines:['015','017']},
+          {id:'broadway-city-hall',nameHe:'Broadway–City Hall',nameEn:'Broadway–City Hall',zone:1,platforms:2,accessibility:true,transfers:[],busLines:['009','099']},
+          {id:'king-edward',nameHe:'King Edward',nameEn:'King Edward',zone:1,platforms:2,accessibility:true,transfers:[],busLines:['025','033']},
+          {id:'oakridge',nameHe:'Oakridge–41st Avenue',nameEn:'Oakridge–41st Avenue',zone:1,platforms:2,accessibility:true,transfers:[],busLines:['041','049']},
+          {id:'langara',nameHe:'Langara–49th Avenue',nameEn:'Langara–49th Avenue',zone:2,platforms:2,accessibility:true,transfers:[],busLines:['049']},
+          {id:'marine-drive',nameHe:'Marine Drive',nameEn:'Marine Drive',zone:2,platforms:2,accessibility:true,transfers:[],busLines:['100']},
+          {id:'bridgeport',nameHe:'Bridgeport',nameEn:'Bridgeport',zone:2,platforms:2,accessibility:true,transfers:[],busLines:['405','407','410']},
+          {id:'templeton',nameHe:'Templeton',nameEn:'Templeton',zone:2,platforms:2,accessibility:true,transfers:[],busLines:['405']},
+          {id:'sea-island-centre',nameHe:'Sea Island Centre',nameEn:'Sea Island Centre',zone:2,platforms:2,accessibility:true,transfers:[],busLines:['403','412']},
+          {id:'yvr-airport',nameHe:'YVR–Airport',nameEn:'YVR–Airport',zone:2,platforms:2,accessibility:true,transfers:[],busLines:['424']},
+          {id:'aberdeen',nameHe:'Aberdeen',nameEn:'Aberdeen',zone:2,platforms:2,accessibility:true,transfers:[],busLines:['403','407']},
+          {id:'lansdowne',nameHe:'Lansdowne',nameEn:'Lansdowne',zone:2,platforms:2,accessibility:true,transfers:[],busLines:['401','403']},
+          {id:'richmond-brighouse',nameHe:'Richmond-Brighouse',nameEn:'Richmond-Brighouse',zone:2,platforms:2,accessibility:true,transfers:[],busLines:['401','402','407']}
+        ]
+      }
+    };
+
+    const transferTypeMap = {
+      'canada': 'Canada Line',
+      'expo': 'Expo Line', 
+      'millennium': 'Millennium Line',
+      'seabus': 'SeaBus',
+      'westcoast': 'West Coast Express'
+    };
+
+    /* ===== Station lists by line ===== */
+    function renderLines() {
+      const container = document.getElementById('linesContainer');
+      
+      const stationsWithLines = new Map();
+      
+      Object.entries(lines).forEach(([lineKey, lineData]) => {
+        lineData.stations.forEach(station => {
+          if (!stationsWithLines.has(station.id)) {
+            stationsWithLines.set(station.id, {
+              ...station,
+              lines: []
+            });
+          }
+          
+          const stationData = stationsWithLines.get(station.id);
+          stationData.lines.push({
+            key: lineKey,
+            nameHe: lineData.nameHe,
+            nameEn: lineData.nameEn,
+            color: lineData.color
+          });
+        });
+      });
+      
+      Object.entries(lines).forEach(([lineKey, lineData]) => {
+        const lineDiv = document.createElement('div');
+        lineDiv.className = 'bg-white rounded-xl shadow-lg overflow-hidden';
+        
+        lineDiv.innerHTML = `
+          <div class="p-4" style="background-color: ${lineData.color}; color: white;">
+            <h3 class="text-xl font-bold">${lineData.nameHe}</h3>
+            <p class="text-sm opacity-90">${lineData.nameEn} • ${lineData.stations.length} stations</p>
+          </div>
+          <div class="p-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" id="stations-${lineKey}"></div>
+          </div>
+        `;
+        
+        container.appendChild(lineDiv);
+        
+        const grid = document.getElementById(`stations-${lineKey}`);
+        lineData.stations.forEach(st => {
+          const stationData = stationsWithLines.get(st.id);
+          const btn = document.createElement('button');
+          btn.className = 'text-left p-3 rounded-lg border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors';
+          
+          const linesInfo = stationData.lines.map(line => 
+            `<span class="inline-flex items-center gap-1">
+              <span class="w-3 h-3 rounded-full" style="background-color: ${line.color}"></span>
+              <span class="text-xs">${line.nameHe}</span>
+            </span>`
+          ).join(' ');
+          
+          btn.innerHTML = `
+            <div class="font-medium text-gray-800">${st.nameHe}</div>
+            <div class="text-sm text-gray-600">${st.nameEn}</div>
+            <div class="text-xs text-gray-500 mt-1">
+              Zone ${st.zone} • ${st.platforms} platforms
+              ${st.accessibility ? '<span class="text-xs text-green-700">♿︎</span>' : ''}
+            </div>
+            <div class="text-xs mt-1">
+              Lines: ${linesInfo}
+            </div>
+            ${st.busLines && st.busLines.length ? `<div class="text-xs mt-1 text-orange-600">
+              Buses: ${st.busLines.slice(0, 2).join(', ')}${st.busLines.length > 2 ? ` +${st.busLines.length - 2}` : ''}
+            </div>` : ''}`;
+          btn.addEventListener('click',() => handleStationClick(st.id));
+          grid.appendChild(btn);
+        });
+      });
+    }
+
+    /* ===== Station modal ===== */
+    function getStationInfo(stationId) {
+      const stationLines = [];
+      let stationData = {};
+      let busLines = [];
+      
+      Object.entries(lines).forEach(([lineKey, lineData]) => {
+        const station = lineData.stations.find(s => s.id === stationId);
+        if (station) {
+          if (!stationData.nameHe) {
+            Object.assign(stationData, station);
+            busLines = station.busLines || [];
+          }
+          stationLines.push({
+            key: lineKey,
+            nameHe: lineData.nameHe,
+            nameEn: lineData.nameEn,
+            color: lineData.color
+          });
+        }
+      });
+      
+      if (stationLines.length > 0) {
+        const enrichedData = enrichedStationsData[stationId] || {};
+        
+        return { 
+          ...stationData, 
+          lines: stationLines, 
+          busLines: busLines,
+          enriched: enrichedData
+        };
+      }
+      
+      return null;
+    }
+
+    const stationModal = document.getElementById('stationModal');
+    const stationContent = document.getElementById('stationContent');
+
+    function handleStationClick(stationId) {
+      const st = getStationInfo(stationId);
+      if (!st) return;
+      
+      let enrichedContent = '';
+      
+      if (st.enriched && Object.keys(st.enriched).length > 0) {
+        const e = st.enriched;
+        
+        enrichedContent += `
+          <div class="mb-4 p-3 bg-blue-50 rounded-lg">
+            <h5 class="font-bold text-blue-800 mb-2">📍 Detailed Info</h5>
+            ${e.official_name ? `<p><strong>Official name:</strong> ${e.official_name}</p>` : ''}
+            ${e.municipality ? `<p><strong>City:</strong> ${e.municipality}</p>` : ''}
+            ${e.opened_date ? `<p><strong>Opened:</strong> ${e.opened_date}</p>` : ''}
+            ${e.platform_type ? `<p><strong>Platform type:</strong> ${e.platform_type}</p>` : ''}
+            ${e.platforms_count ? `<p><strong>Number of platforms:</strong> ${e.platforms_count}</p>` : ''}
+          </div>
+        `;
+        
+        if (e.accessibility_features || e.bike_facilities || e.park_and_ride) {
+          enrichedContent += `
+            <div class="mb-4 p-3 bg-green-50 rounded-lg">
+              <h5 class="font-bold text-green-800 mb-2">♿ Accessibility & Services</h5>
+              ${e.accessibility_features ? `<p><strong>Accessibility:</strong> ${e.accessibility_features}</p>` : ''}
+              ${e.bike_facilities ? `<p><strong>Bikes:</strong> ${e.bike_facilities}</p>` : ''}
+              ${e.park_and_ride ? `<p><strong>Parking:</strong> ${e.park_and_ride ? 'Available' : 'Not available'}</p>` : ''}
+            </div>
+          `;
+        }
+        
+        if (e.bus_connections && e.bus_connections.length > 0) {
+          enrichedContent += `
+            <div class="mb-4 p-3 bg-yellow-50 rounded-lg">
+              <h5 class="font-bold text-yellow-800 mb-2">🚌 Bus Lines</h5>
+              <p>${e.bus_connections.join(', ')}</p>
+            </div>
+          `;
+        }
+        
+        if (e.notable_transfers) {
+          enrichedContent += `
+            <div class="mb-4 p-3 bg-orange-50 rounded-lg">
+              <h5 class="font-bold text-orange-800 mb-2">🔄 Special Connections</h5>
+              <p>${e.notable_transfers}</p>
+            </div>
+          `;
+        }
+        
+        if (e.nearby_attractions && e.nearby_attractions.length > 0) {
+          enrichedContent += `
+            <div class="mb-4 p-3 bg-purple-50 rounded-lg">
+              <h5 class="font-bold text-purple-800 mb-2">🎯 Nearby Attractions</h5>
+              <ul class="list-disc list-inside">
+                ${e.nearby_attractions.map(attraction => `<li>${attraction}</li>`).join('')}
+              </ul>
+            </div>
+          `;
+        }
+        
+        if (e.public_art_notes) {
+          enrichedContent += `
+            <div class="mb-4 p-3 bg-pink-50 rounded-lg">
+              <h5 class="font-bold text-pink-800 mb-2">🎨 Art & Architecture</h5>
+              <p>${e.public_art_notes}</p>
+            </div>
+          `;
+        }
+        
+        if (e.ridership_indicator) {
+          enrichedContent += `
+            <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+              <h5 class="font-bold text-gray-800 mb-2">📊 Usage Data</h5>
+              <p>${e.ridership_indicator}</p>
+            </div>
+          `;
+        }
+        
+        if (e.address) {
+          enrichedContent += `
+            <div class="mb-4 p-3 bg-indigo-50 rounded-lg">
+              <h5 class="font-bold text-indigo-800 mb-2">📍 Approximate Address</h5>
+              <p>${e.address}</p>
+            </div>
+          `;
+        }
+      }
+      
+      stationContent.innerHTML = `
+        <div><h4 class="font-bold text-lg text-gray-800 mb-1">${st.nameHe}</h4><p class="text-gray-600">${st.nameEn}</p></div>
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div class="bg-blue-50 p-3 rounded-lg"><div class="mb-1 text-sm font-medium text-blue-800">Fare Zone</div><p class="text-xl font-bold text-blue-600">Zone ${st.zone}</p></div>
+          <div class="bg-green-50 p-3 rounded-lg"><div class="mb-1 text-sm font-medium text-green-800">Platforms</div><p class="text-xl font-bold text-green-600">${st.platforms}</p></div>
+        </div>
+        <div class="mb-4">
+          <h5 class="font-medium text-gray-800 mb-2">Lines serving this station:</h5>
+          <div class="space-y-2">
+            ${st.lines.map(l=>`<div class="flex items-center gap-3 p-2 bg-gray-50 rounded">
+              <span class="w-4 h-4 rounded-full inline-block" style="background:${l.color}"></span>
+              <span class="font-medium">${l.nameHe}</span><span class="text-sm text-gray-600">(${l.nameEn})</span>
+            </div>`).join('')}
+          </div>
+        </div>
+        ${st.busLines && st.busLines.length ? `
+          <div class="mb-4">
+            <h5 class="font-medium text-gray-800 mb-2">🚌 Bus Lines:</h5>
+            <div class="flex flex-wrap gap-1">
+              ${st.busLines.slice(0,10).map(bus=>`<span class="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs">${bus}</span>`).join('')}
+              ${st.busLines.length > 10 ? `<span class="text-gray-500 text-xs">+${st.busLines.length-10} more</span>` : ''}
+            </div>
+          </div>
+        ` : ''}
+        ${enrichedContent}
+      `;
+      
+      stationModal.classList.remove('hidden');
+      stationModal.style.display = 'flex';
+    }
+
+    function closeStationInfo(){
+      stationModal.classList.add('hidden'); 
+      stationModal.classList.remove('flex');
+    }
+    window.closeStationInfo = closeStationInfo;
+
+    /* ===== SVG drawing ===== */
+    const svg = document.getElementById('schemaSvg');
+    const gPaths = document.getElementById('paths');
+    const gStations = document.getElementById('stations');
+
+    const X = { canadaMain:210, canadaAir:170, canadaRich:250, expoMain:410, expoBranch:520, millennium:630 };
+    const yStart = 100, yStep = 56;
+    const row = {};
+    
+    const expoMain = ['waterfront','burrard','granville','stadium','main-street','commercial','nanaimo','29th-ave','joyce','patterson','metrotown','royal-oak','edmonds','22nd-street','new-west','columbia','scott-road','gateway','surrey-central','king-george'];
+    expoMain.forEach((id,i) => row[id] = i);
+    ['sapperton','braid','lougheed','production-way'].forEach((id,i) => row[id] = row['columbia']+1+i);
+    
+    const canadaMain = ['waterfront','vancouver-city-centre','yaletown','olympic-village','broadway-city-hall','king-edward','oakridge','langara','marine-drive','bridgeport'];
+    canadaMain.forEach((id,i) => row[id] = Math.min(row[id]??Infinity, i));
+    
+    const canadaAir = ['templeton','sea-island-centre','yvr-airport'];
+    canadaAir.forEach((id,i) => row[id] = row['bridgeport']+1+i);
+    
+    const canadaRich = ['aberdeen','lansdowne','richmond-brighouse'];
+    canadaRich.forEach((id,i) => row[id] = row['bridgeport']+1+i);
+    
+    const milli = ['vcc-clark','commercial','renfrew','rupert','gilmore','brentwood','holdom','sperling','lake-city-way','production-way','lougheed','burquitlam','moody-centre','inlet-centre','coquitlam-central','lincoln','lafarge-lake'];
+    const mStart = row['commercial'] - 1;
+    milli.forEach((id,i) => row[id] = row[id]??(mStart+i));
+
+    const Y = r => yStart + r*yStep;
+
+    function addPath(points,color){
+      if(points.length<2) return;
+      const d = points.map((p,i)=> (i?'L':'M')+p.x+' '+p.y ).join(' ');
+      const pth = document.createElementNS('http://www.w3.org/2000/svg','path');
+      pth.setAttribute('d', d);
+      pth.setAttribute('stroke', color);
+      pth.setAttribute('stroke-width', 6);
+      pth.setAttribute('fill','none');
+      pth.setAttribute('stroke-linecap','round');
+      pth.setAttribute('stroke-linejoin','round');
+      gPaths.appendChild(pth);
+    }
+
+    function link(a,b){
+      const p = document.createElementNS('http://www.w3.org/2000/svg','path');
+      p.setAttribute('d',`M ${a.x} ${a.y} L ${b.x} ${b.y}`);
+      p.setAttribute('stroke','#111827'); 
+      p.setAttribute('stroke-width','2'); 
+      p.setAttribute('stroke-dasharray','4 4'); 
+      p.setAttribute('opacity','0.35');
+      gPaths.appendChild(p);
+    }
+
+    function createUniqueStationsMap() {
+      const uniqueStations = new Map();
+      
+      Object.entries(lines).forEach(([lineKey, lineData]) => {
+        lineData.stations.forEach(station => {
+          if (!uniqueStations.has(station.id)) {
+            uniqueStations.set(station.id, {
+              id: station.id,
+              nameHe: station.nameHe,
+              nameEn: station.nameEn,
+              lines: []
+            });
+          }
+          
+          const stationData = uniqueStations.get(station.id);
+          stationData.lines.push({
+            key: lineKey,
+            color: lineData.color,
+            name: lineData.nameHe
+          });
+        });
+      });
+      
+      return uniqueStations;
+    }
+
+    function addStationUnique(x, y, id, linesData, label, preferred = 'right') {
+      const NS = 'http://www.w3.org/2000/svg';
+      const g = document.createElementNS(NS, 'g');
+      g.classList.add('taparea');
+      
+      const isTransfer = linesData.length > 1;
+
+      if (isTransfer) {
+        const outer = document.createElementNS(NS, 'circle');
+        outer.setAttribute('cx', x); outer.setAttribute('cy', y);
+        outer.setAttribute('r', 10); outer.setAttribute('fill', '#fff');
+        outer.setAttribute('stroke', '#333'); outer.setAttribute('stroke-width', 2);
+        outer.classList.add('station');
+        g.appendChild(outer);
+
+        linesData.forEach((ln, i) => {
+          const ang = (2*Math.PI*i)/linesData.length, r = 5;
+          const c = document.createElementNS(NS, 'circle');
+          c.setAttribute('cx', x + Math.cos(ang)*r);
+          c.setAttribute('cy', y + Math.sin(ang)*r);
+          c.setAttribute('r', 3); c.setAttribute('fill', ln.color);
+          g.appendChild(c);
+        });
+      } else {
+        const c = document.createElementNS(NS, 'circle');
+        c.setAttribute('cx', x); c.setAttribute('cy', y);
+        c.setAttribute('r', 7);
+        c.setAttribute('fill', linesData[0].color);
+        c.setAttribute('stroke', '#fff'); c.setAttribute('stroke-width', 2);
+        c.classList.add('station');
+        g.appendChild(c);
+      }
+
+      const padding = 6;
+      const sideOffset = 22;
+      const topOffset = 18;
+      const mode = isTransfer ? 'top' : (preferred === 'left' ? 'left' : 'right');
+
+      const r = document.createElementNS(NS, 'rect');
+      r.classList.add('label-bg');
+      
+      const t = document.createElementNS(NS, 'text');
+      t.classList.add('station-label');
+      t.textContent = label;
+      t.setAttribute('text-anchor', 'middle');
+      t.setAttribute('dominant-baseline', 'middle');
+      t.setAttribute('pointer-events', 'none');
+
+      g.appendChild(r);
+      g.appendChild(t);
+      gStations.appendChild(g);
+      
+      const bb = t.getBBox();
+      const w = Math.max(60, Math.ceil(bb.width) + 2*padding);
+      const h = Math.max(18, Math.ceil(bb.height) + 2*padding);
+
+      let rx, ry, tx, ty;
+      if (mode === 'right') {
+        rx = x + sideOffset - padding;
+        ry = y - h/2;
+        tx = rx + w/2;
+        ty = ry + h/2;
+      } else if (mode === 'left') {
+        rx = x - sideOffset - w + padding;
+        ry = y - h/2;
+        tx = rx + w/2;
+        ty = ry + h/2;
+      } else {
+        rx = x - w/2;
+        ry = y - 10 - topOffset - h/2;
+        tx = x;
+        ty = ry + h/2;
+      }
+
+      r.setAttribute('x', rx);
+      r.setAttribute('y', ry);
+      r.setAttribute('width', w);
+      r.setAttribute('height', h);
+      
+      t.setAttribute('x', tx);
+      t.setAttribute('y', ty);
+
+      g.addEventListener('click', function() {
+        handleStationClick(id);
+      });
+    }
+
+    function drawUniqueStations() {
+      const uniqueStations = createUniqueStationsMap();
+      
+      const stationPositions = {
+        ...canadaMain.reduce((acc, id) => {
+          acc[id] = { x: X.canadaMain, y: Y(row[id]), labelSide: 'left' };
+          return acc;
+        }, {}),
+   
+        ...canadaAir.reduce((acc, id) => {
+          acc[id] = { x: X.canadaAir, y: Y(row[id]), labelSide: 'left' };
+          return acc;
+        }, {}),
+   
+        ...canadaRich.reduce((acc, id) => {
+          acc[id] = { x: X.canadaRich, y: Y(row[id]), labelSide: 'right' };
+          return acc;
+        }, {}),
+        
+        ...expoMain.reduce((acc, id) => {
+          acc[id] = { x: X.expoMain, y: Y(row[id]), labelSide: 'right' };
+          return acc;
+        }, {}),
+        
+        ...['sapperton','braid','lougheed','production-way'].reduce((acc, id) => {
+          acc[id] = { x: X.expoBranch, y: Y(row[id]), labelSide: 'left' };
+          return acc;
+        }, {}),
+        
+        ...milli.reduce((acc, id) => {
+          acc[id] = { x: X.millennium, y: Y(row[id]), labelSide: 'right' };
+          return acc;
+        }, {})
+      };
+      
+      const specialPositions = {
+        'waterfront':     { x: (X.canadaMain + X.expoMain) / 2, y: Y(row['waterfront']),     labelSide: 'top' },
+        'commercial':     { x: (X.expoMain   + X.millennium) / 2, y: Y(row['commercial']),    labelSide: 'top' },
+        'lougheed':       { x: (X.expoBranch + X.millennium) / 2, y: Y(row['lougheed']),      labelSide: 'top' },
+        'production-way': { x: (X.expoBranch + X.millennium) / 2, y: Y(row['production-way']),labelSide: 'top' }
+      };
+      
+      uniqueStations.forEach((stationData, stationId) => {
+        const position = specialPositions[stationId] || stationPositions[stationId];
+        if (!position) return;
+        
+        let labelSide = position.labelSide;
+        if (stationData.lines.length > 1) {
+          labelSide = 'center';
+        }
+        
+        addStationUnique(
+          position.x, 
+          position.y, 
+          stationId, 
+          stationData.lines,
+          stationData.nameHe, 
+          labelSide
+        );
+      });
+    }
+
+    function drawMap() {
+      addPath(canadaMain.map(id => ({x:X.canadaMain,y:Y(row[id])})), lines.canada.color);
+      addPath([ {x:X.canadaMain,y:Y(row['bridgeport'])}, ...canadaAir.map(id => ({x:X.canadaAir,y:Y(row[id])})) ], lines.canada.color);
+      addPath([ {x:X.canadaMain,y:Y(row['bridgeport'])}, ...canadaRich.map(id => ({x:X.canadaRich,y:Y(row[id])})) ], lines.canada.color);
+
+      addPath(expoMain.map(id => ({x:X.expoMain,y:Y(row[id])})), lines.expo.color);
+      addPath([ {x:X.expoMain,y:Y(row['columbia'])}, ...['sapperton','braid','lougheed','production-way'].map(id => ({x:X.expoBranch,y:Y(row[id])})) ], lines.expo.color);
+
+      addPath(milli.map(id => ({x:X.millennium,y:Y(row[id])})), lines.millennium.color);
+
+      link({x:X.canadaMain,y:Y(row['waterfront'])},{x:X.expoMain,y:Y(row['waterfront'])});
+      link({x:X.expoMain,y:Y(row['commercial'])},{x:X.millennium,y:Y(row['commercial'])});
+      link({x:X.expoBranch,y:Y(row['lougheed'])},{x:X.millennium,y:Y(row['lougheed'])});
+      link({x:X.expoBranch,y:Y(row['production-way'])},{x:X.millennium,y:Y(row['production-way'])});
+      link({x:X.canadaMain,y:Y(row['bridgeport'])},{x:X.canadaAir,y:Y(row['templeton'])});
+      link({x:X.canadaMain,y:Y(row['bridgeport'])},{x:X.canadaRich,y:Y(row['aberdeen'])});
+
+      drawUniqueStations();
+    }
+
+    window.addEventListener('load', () => {
+      drawMap();
+      renderLines();
+    });
+  </script>
+</body>
+</html>

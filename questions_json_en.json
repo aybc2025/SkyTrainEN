@@ -1,0 +1,540 @@
+{
+  "questions": [
+    {
+      "id": "Q1",
+      "type": "MC",
+      "question_text": "What year did the SkyTrain Expo Line open to the public?",
+      "options": ["1983", "1985", "1986", "1988"],
+      "correct_answer": "1985",
+      "difficulty": "easy",
+      "category": "Timeline",
+      "explanation": "The Expo Line opened in December 1985 in time for Expo '86."
+    },
+    {
+      "id": "Q2",
+      "type": "MC",
+      "question_text": "Which SkyTrain line opened in 2002?",
+      "options": ["Expo Line", "Millennium Line", "Canada Line", "Evergreen Extension"],
+      "correct_answer": "Millennium Line",
+      "difficulty": "easy",
+      "category": "Lines",
+      "explanation": "The Millennium Line opened in 2002 as the second SkyTrain line."
+    },
+    {
+      "id": "Q3",
+      "type": "MC",
+      "question_text": "Which line connects downtown Vancouver with Richmond and the airport?",
+      "options": ["Expo Line", "Millennium Line", "Canada Line", "West Coast Express"],
+      "correct_answer": "Canada Line",
+      "difficulty": "easy",
+      "category": "Lines",
+      "explanation": "The Canada Line (opened in 2009) travels from downtown Vancouver to Richmond and YVR Airport."
+    },
+    {
+      "id": "Q4",
+      "type": "MC",
+      "question_text": "Which station connects directly to both SeaBus and West Coast Express?",
+      "options": ["Burrard", "Waterfront", "Bridgeport", "King George"],
+      "correct_answer": "Waterfront",
+      "difficulty": "easy",
+      "category": "Stations",
+      "explanation": "Waterfront Station links SkyTrain with the SeaBus and West Coast Express commuter rail."
+    },
+    {
+      "id": "Q5",
+      "type": "MC",
+      "question_text": "Which SkyTrain station sees the highest annual ridership?",
+      "options": ["Waterfront", "Commercial–Broadway", "Metrotown", "Surrey Central"],
+      "correct_answer": "Commercial–Broadway",
+      "difficulty": "medium",
+      "category": "Stations",
+      "explanation": "Commercial–Broadway is typically the busiest station (~11 million entries in 2024)."
+    },
+    {
+      "id": "Q6",
+      "type": "TF",
+      "question_text": "Burrard Station was closed for most of 2023 for major upgrades.",
+      "options": ["True", "False"],
+      "correct_answer": "True",
+      "difficulty": "medium",
+      "category": "Stations",
+      "explanation": "True. Burrard Station closed in February 2023 and reopened in early 2024 after elevator and escalator upgrades."
+    },
+    {
+      "id": "Q7",
+      "type": "TF",
+      "question_text": "Joyce–Collingwood Station was originally called just 'Joyce Station'.",
+      "options": ["True", "False"],
+      "correct_answer": "True",
+      "difficulty": "easy",
+      "category": "Stations",
+      "explanation": "True. It was known as Joyce Station until being renamed in 2016 to include 'Collingwood'."
+    },
+    {
+      "id": "Q8",
+      "type": "TF",
+      "question_text": "Stadium–Chinatown Station always had 'Chinatown' in its name.",
+      "options": ["True", "False"],
+      "correct_answer": "False",
+      "difficulty": "medium",
+      "category": "Stations",
+      "explanation": "False. It was just 'Stadium' until 2004, when 'Chinatown' was added."
+    },
+    {
+      "id": "Q9",
+      "type": "TF",
+      "question_text": "Commercial–Broadway Station was created by merging two separate stations.",
+      "options": ["True", "False"],
+      "correct_answer": "True",
+      "difficulty": "hard",
+      "category": "Stations",
+      "explanation": "True. In 2009, Expo Line's Broadway Station and Millennium's Commercial Drive Station were merged into Commercial–Broadway."
+    },
+    {
+      "id": "Q10",
+      "type": "TF",
+      "question_text": "The new Capstan Station on the Canada Line was funded through developer contributions.",
+      "options": ["True", "False"],
+      "correct_answer": "True",
+      "difficulty": "medium",
+      "category": "Stations",
+      "explanation": "True. Developers paid levies to fund Capstan Station, which opened in December 2024."
+    },
+    {
+      "id": "Q11",
+      "type": "MC",
+      "question_text": "Which SkyTrain station is the downtown terminal for both Expo and Canada Lines?",
+      "options": ["Burrard", "Waterfront", "Granville", "Vancouver City Centre"],
+      "correct_answer": "Waterfront",
+      "difficulty": "easy",
+      "category": "Stations",
+      "explanation": "Waterfront is the terminal station for both Expo and Canada Lines in downtown."
+    },
+    {
+      "id": "Q12",
+      "type": "MC",
+      "question_text": "What is the eastern terminus of the Expo Line (as of 2025)?",
+      "options": ["King George Station", "Production Way–University Station", "Surrey Central Station", "Lafarge Lake–Douglas Station"],
+      "correct_answer": "King George Station",
+      "difficulty": "easy",
+      "category": "Stations",
+      "explanation": "King George Station in Surrey is the current Expo Line terminus until the Langley extension opens."
+    },
+    {
+      "id": "Q13",
+      "type": "MC",
+      "question_text": "Where is the Millennium Line's terminus on the northeast end?",
+      "options": ["Waterfront", "New Westminster", "Lafarge Lake–Douglas", "Coquitlam Central"],
+      "correct_answer": "Lafarge Lake–Douglas",
+      "difficulty": "easy",
+      "category": "Stations",
+      "explanation": "The Millennium Line ends at Lafarge Lake–Douglas Station in Coquitlam (since the Evergreen Extension opened)."
+    },
+    {
+      "id": "Q14",
+      "type": "MC",
+      "question_text": "What is the terminal station of the Richmond branch of the Canada Line?",
+      "options": ["YVR–Airport", "Richmond–Brighouse", "Waterfront", "Bridgeport"],
+      "correct_answer": "Richmond–Brighouse",
+      "difficulty": "easy",
+      "category": "Stations",
+      "explanation": "Richmond–Brighouse is the southern terminus of the Richmond branch of the Canada Line."
+    },
+    {
+      "id": "Q15",
+      "type": "MC",
+      "question_text": "Match each SkyTrain station to its municipality: 1) Metrotown, 2) King George, 3) Richmond–Brighouse, 4) Lafarge Lake–Douglas",
+      "options": [
+        "1-Burnaby; 2-Surrey; 3-Richmond; 4-Coquitlam",
+        "1-Vancouver; 2-Surrey; 3-Richmond; 4-Burnaby", 
+        "1-Burnaby; 2-Coquitlam; 3-Richmond; 4-Surrey",
+        "1-New Westminster; 2-Surrey; 3-Vancouver; 4-Coquitlam"
+      ],
+      "correct_answer": "1-Burnaby; 2-Surrey; 3-Richmond; 4-Coquitlam",
+      "difficulty": "easy",
+      "category": "Stations",
+      "explanation": "Metrotown is in Burnaby; King George in Surrey; Richmond–Brighouse in Richmond; Lafarge Lake–Douglas in Coquitlam."
+    },
+    {
+      "id": "Q16",
+      "type": "MC",
+      "question_text": "Which two stations switched from Millennium Line service to Expo Line service in 2016?",
+      "options": ["Burrard and Granville", "Waterfront and Broadway", "Sapperton and Braid", "Lougheed and Columbia"],
+      "correct_answer": "Sapperton and Braid",
+      "difficulty": "hard",
+      "category": "Stations",
+      "explanation": "When the lines were reconfigured in 2016, Sapperton and Braid switched from Millennium to Expo Line service."
+    },
+    {
+      "id": "Q17",
+      "type": "MC",
+      "question_text": "Which station is directly connected to a major shopping mall?",
+      "options": ["Surrey Central", "Metrotown", "Braid", "Scott Road"],
+      "correct_answer": "Metrotown",
+      "difficulty": "easy",
+      "category": "Stations",
+      "explanation": "Metrotown Station is integrated with Metropolis at Metrotown shopping centre in Burnaby."
+    },
+    {
+      "id": "Q18",
+      "type": "MC",
+      "question_text": "Surrey Central Station is located near which landmarks?",
+      "options": ["SFU Surrey and Central City Mall", "Metrotown Mall and Library", "City Hall and BCIT", "Richmond Centre and Minoru Park"],
+      "correct_answer": "SFU Surrey and Central City Mall",
+      "difficulty": "medium",
+      "category": "Stations",
+      "explanation": "Surrey Central is near Central City Mall (which houses SFU Surrey) and close to City Hall."
+    },
+    {
+      "id": "Q19",
+      "type": "MC",
+      "question_text": "Which station is a junction between Expo and Millennium Lines with cross-platform transfers?",
+      "options": ["Commercial–Broadway", "Waterfront", "Lougheed Town Centre", "Columbia"],
+      "correct_answer": "Commercial–Broadway",
+      "difficulty": "medium",
+      "category": "Stations",
+      "explanation": "Commercial–Broadway is the main transfer point between Expo-Millennium (cross-platform)."
+    },
+    {
+      "id": "Q20",
+      "type": "MC",
+      "question_text": "Which historic building houses Waterfront Station?",
+      "options": ["Former post office", "1930s Art Deco tower", "Old CPR railway station", "Converted warehouse"],
+      "correct_answer": "Old CPR railway station",
+      "difficulty": "hard",
+      "category": "Stations",
+      "explanation": "Waterfront Station is the grand neoclassical CPR railway station from 1914."
+    },
+    {
+      "id": "Q21",
+      "type": "MC",
+      "question_text": "Why is the Expo Line called the 'Expo Line'?",
+      "options": ["Named after Expo 86 exhibition", "Named after Expo Gardens in Burnaby", "Short for 'Express Passenger Operation'", "It was an experimental line"],
+      "correct_answer": "Named after Expo 86 exhibition",
+      "difficulty": "easy",
+      "category": "Trivia",
+      "explanation": "It was built for Expo '86, so it was named the Expo Line to commemorate the event."
+    },
+    {
+      "id": "Q22",
+      "type": "MC",
+      "question_text": "The Millennium Line got its name because:",
+      "options": ["It runs along Millennium Boulevard", "It opened around the year 2000", "It's 1000 meters above sea level", "It's named after a BC politician"],
+      "correct_answer": "It opened around the year 2000",
+      "difficulty": "easy",
+      "category": "Trivia",
+      "explanation": "It opened in 2002 (the new millennium), hence 'Millennium Line'."
+    },
+    {
+      "id": "Q23",
+      "type": "MC",
+      "question_text": "What was the Canada Line commonly called during planning?",
+      "options": ["Evergreen Line", "RAV Line", "Pacific Line", "Expo 2010 Line"],
+      "correct_answer": "RAV Line",
+      "difficulty": "medium",
+      "category": "Trivia",
+      "explanation": "During planning it was the RAV Line (Richmond-Airport-Vancouver), but launched as 'Canada Line'."
+    },
+    {
+      "id": "Q24",
+      "type": "MC",
+      "question_text": "What track gauge do SkyTrain trains run on?",
+      "options": ["Narrow gauge (1,000 mm)", "Standard gauge (1,435 mm)", "Broad gauge (1,676 mm)", "They use rubber wheels on concrete"],
+      "correct_answer": "Standard gauge (1,435 mm)",
+      "difficulty": "hard",
+      "category": "Lines",
+      "explanation": "SkyTrain uses standard gauge track on all lines."
+    },
+    {
+      "id": "Q25",
+      "type": "MC",
+      "question_text": "What technology do Expo and Millennium Line trains use for propulsion?",
+      "options": ["Diesel-electric engines", "Linear Induction Motors (LIM)", "Overhead pantograph with AC motors", "Maglev (magnetic levitation)"],
+      "correct_answer": "Linear Induction Motors (LIM)",
+      "difficulty": "easy",
+      "category": "Lines",
+      "explanation": "Expo/Millennium use LIM propulsion with power from the third rail."
+    },
+    {
+      "id": "Q26",
+      "type": "MC",
+      "question_text": "How are Canada Line trains powered?",
+      "options": ["Third rail", "Overhead wire (catenary)", "Batteries", "Diesel generator"],
+      "correct_answer": "Overhead wire (catenary)",
+      "difficulty": "medium",
+      "category": "Lines",
+      "explanation": "Canada Line uses conventional electric motors powered by 750V DC overhead wires."
+    },
+    {
+      "id": "Q27",
+      "type": "MC",
+      "question_text": "What is SkyTrain's maximum speed?",
+      "options": ["60 km/h", "80 km/h", "100 km/h", "130 km/h"],
+      "correct_answer": "80 km/h",
+      "difficulty": "easy",
+      "category": "Operations",
+      "explanation": "SkyTrain trains reach approximately 80 km/h at full speed on straight sections."
+    },
+    {
+      "id": "Q28",
+      "type": "MC",
+      "question_text": "What train control system does SkyTrain use?",
+      "options": ["Fixed block signalling", "SelTrac moving-block CBTC", "Driver sight and radio", "Linear synchronous control"],
+      "correct_answer": "SelTrac moving-block CBTC",
+      "difficulty": "medium",
+      "category": "Operations",
+      "explanation": "SkyTrain uses the SelTrac communications-based moving-block system for automation."
+    },
+    {
+      "id": "Q29",
+      "type": "MC",
+      "question_text": "How are SkyTrain fares structured?",
+      "options": ["Flat fare for all trips", "Zones based on area traveled", "Distance-based fares only", "Free in downtown"],
+      "correct_answer": "Zones based on area traveled",
+      "difficulty": "easy",
+      "category": "Operations",
+      "explanation": "TransLink uses fare zones: Vancouver is Zone 1; inner suburbs Zone 2; outer suburbs Zone 3."
+    },
+    {
+      "id": "Q30",
+      "type": "MC",
+      "question_text": "SkyTrain's on-time service delivery is approximately:",
+      "options": ["75%", "85%", "96%", "100%"],
+      "correct_answer": "96%",
+      "difficulty": "medium",
+      "category": "Operations",
+      "explanation": "BCRTC reports SkyTrain on-time performance around 96.5% in recent years."
+    },
+    {
+      "id": "Q31",
+      "type": "MC",
+      "question_text": "Which SkyTrain lines are operated by BCRTC (TransLink) directly?",
+      "options": ["Expo and Millennium", "Canada and Millennium", "Expo and Canada", "All three lines"],
+      "correct_answer": "Expo and Millennium",
+      "difficulty": "easy",
+      "category": "Operations",
+      "explanation": "TransLink's BCRTC operates Expo and Millennium Lines, while Canada Line is operated by ProTrans BC."
+    },
+    {
+      "id": "Q32",
+      "type": "MC",
+      "question_text": "Which SkyTrain station has platform screen doors?",
+      "options": ["Waterfront", "YVR–Airport", "Commercial–Broadway", "No station"],
+      "correct_answer": "YVR–Airport",
+      "difficulty": "hard",
+      "category": "Operations",
+      "explanation": "Only YVR–Airport Station has platform screen doors (for airport safety and climate) - no other station does."
+    },
+    {
+      "id": "Q33",
+      "type": "MC",
+      "question_text": "Which municipalities have SkyTrain service?",
+      "options": [
+        "Vancouver, Burnaby, New West, Richmond, Surrey, Coquitlam, Port Moody",
+        "Only Vancouver and Burnaby",
+        "All Metro Vancouver cities",
+        "Only Vancouver, Richmond, Surrey"
+      ],
+      "correct_answer": "Vancouver, Burnaby, New West, Richmond, Surrey, Coquitlam, Port Moody",
+      "difficulty": "medium",
+      "category": "Geography",
+      "explanation": "SkyTrain's 54 stations are in Vancouver, Burnaby, New Westminster, Richmond, Surrey, Coquitlam and Port Moody."
+    },
+    {
+      "id": "Q34",
+      "type": "MC",
+      "question_text": "The Expo Line travels through which four cities?",
+      "options": [
+        "Vancouver, Burnaby, New West, Surrey",
+        "Vancouver, Coquitlam, Richmond, Surrey",
+        "Vancouver, Burnaby, Richmond, Langley",
+        "Vancouver, Burnaby, New West, Coquitlam"
+      ],
+      "correct_answer": "Vancouver, Burnaby, New West, Surrey",
+      "difficulty": "easy",
+      "category": "Geography",
+      "explanation": "The Expo Line connects Vancouver, Burnaby, New Westminster and Surrey."
+    },
+    {
+      "id": "Q35",
+      "type": "MC",
+      "question_text": "The Millennium Line runs primarily through which areas?",
+      "options": [
+        "East Vancouver, Burnaby, Tri-Cities",
+        "North Vancouver and West Vancouver",
+        "Richmond and Delta",
+        "Surrey and Langley"
+      ],
+      "correct_answer": "East Vancouver, Burnaby, Tri-Cities",
+      "difficulty": "easy",
+      "category": "Geography",
+      "explanation": "The Millennium Line goes from East Vancouver through Burnaby to Port Moody and Coquitlam (Tri-Cities)."
+    },
+    {
+      "id": "Q36",
+      "type": "MC",
+      "question_text": "The Canada Line primarily serves which two cities?",
+      "options": ["Vancouver and Richmond", "Burnaby and New West", "Surrey and Langley", "Coquitlam and Port Moody"],
+      "correct_answer": "Vancouver and Richmond",
+      "difficulty": "easy",
+      "category": "Geography",
+      "explanation": "The Canada Line connects downtown Vancouver with Richmond (and YVR)."
+    },
+    {
+      "id": "Q37",
+      "type": "MC",
+      "question_text": "Waterfront Station is adjacent to which major landmark?",
+      "options": ["Pacific Central Station", "Canada Place and cruise terminal", "BC Place Stadium", "Metrotown Mall"],
+      "correct_answer": "Canada Place and cruise terminal",
+      "difficulty": "medium",
+      "category": "Geography",
+      "explanation": "Waterfront is directly next to Canada Place and the cruise ship terminal on Burrard Inlet."
+    },
+    {
+      "id": "Q38",
+      "type": "TF",
+      "question_text": "The combined Expo and Millennium Lines were once the world's longest driverless system.",
+      "options": ["True", "False"],
+      "correct_answer": "True",
+      "difficulty": "hard",
+      "category": "Trivia",
+      "explanation": "True. At ~79 km, Vancouver was the longest driverless metro until later systems surpassed it."
+    },
+    {
+      "id": "Q39",
+      "type": "TF",
+      "question_text": "SkyTrain appears in several movies/TV shows because of its futuristic appearance.",
+      "options": ["True", "False"],
+      "correct_answer": "True",
+      "difficulty": "hard",
+      "category": "Trivia",
+      "explanation": "True. For example, 'SkyTrackers' from 1986 prominently featured Vancouver's SkyTrain."
+    },
+    {
+      "id": "Q40",
+      "type": "MC",
+      "question_text": "When did SkyTrain revenue service begin?",
+      "options": ["1983", "1984", "1985", "1986"],
+      "correct_answer": "1985",
+      "difficulty": "medium",
+      "category": "Timeline",
+      "explanation": "December 11, 1985 is the official opening date for SkyTrain service."
+    },
+    {
+      "id": "Q41",
+      "type": "MC",
+      "question_text": "During the 2010 Olympics, SkyTrain operated:",
+      "options": ["Limited hours", "Regular hours", "24 hours", "Authorized personnel only"],
+      "correct_answer": "24 hours",
+      "difficulty": "medium",
+      "category": "Timeline",
+      "explanation": "SkyTrain ran mostly 24/7 during the 2010 Winter Olympics to accommodate spectators (first time doing so)."
+    },
+    {
+      "id": "Q42",
+      "type": "MC",
+      "question_text": "Which major extension opened in late 2016?",
+      "options": ["Surrey-Langley", "Evergreen (Coquitlam)", "Canada Line YVR", "UBC Line"],
+      "correct_answer": "Evergreen (Coquitlam)",
+      "difficulty": "easy",
+      "category": "Timeline",
+      "explanation": "The Evergreen Extension (Millennium Line to Coquitlam) opened in December 2016."
+    },
+    {
+      "id": "Q43",
+      "type": "MC",
+      "question_text": "Which project was cancelled in 2018 in favor of extending SkyTrain in Surrey?",
+      "options": ["Surrey LRT Project", "Broadway Subway", "UBC BRT", "Burnaby Mountain Gondola"],
+      "correct_answer": "Surrey LRT Project",
+      "difficulty": "hard",
+      "category": "Policy",
+      "explanation": "In 2018, the planned Surrey LRT was cancelled, and resources were reallocated to SkyTrain to Langley."
+    },
+    {
+      "id": "Q44",
+      "type": "MC",
+      "question_text": "What portion of pre-pandemic ridership had SkyTrain recovered by mid-2025?",
+      "options": ["~60%", "~75%", "~95%", "Over 100%"],
+      "correct_answer": "~95%",
+      "difficulty": "medium",
+      "category": "Ridership",
+      "explanation": "By Q2 2025, SkyTrain was carrying ~95% of 2019 ridership again."
+    },
+    {
+      "id": "Q45",
+      "type": "MC",
+      "question_text": "Which two stations left the Millennium Line and became Expo Line stations in 2016?",
+      "options": ["Braid and Sapperton", "Lougheed and Columbia", "Moody Centre and Burquitlam", "Stadium and Granville"],
+      "correct_answer": "Braid and Sapperton",
+      "difficulty": "hard",
+      "category": "Stations",
+      "explanation": "In 2016, Braid and Sapperton stations switched from Millennium to Expo Line service."
+    },
+    {
+      "id": "Q46",
+      "type": "MC",
+      "question_text": "Which company operates the Canada Line under contract?",
+      "options": ["BC Rapid Transit Company", "ProTrans BC", "Bombardier", "Metrolinx"],
+      "correct_answer": "ProTrans BC",
+      "difficulty": "easy",
+      "category": "Operations",
+      "explanation": "ProTrans BC (an SNC-Lavalin subsidiary) operates the Canada Line under a P3 contract."
+    },
+    {
+      "id": "Q47",
+      "type": "MC",
+      "question_text": "Which SkyTrain station is integrated into a shopping complex in New Westminster?",
+      "options": ["22nd Street", "Columbia", "New Westminster", "Edmonds"],
+      "correct_answer": "New Westminster",
+      "difficulty": "medium",
+      "category": "Stations",
+      "explanation": "New Westminster Station is built into a shopping complex (Shops at New West) at platform level."
+    },
+    {
+      "id": "Q48",
+      "type": "TF",
+      "question_text": "There have never been SkyTrain collisions because of its automatic controls.",
+      "options": ["True", "False"],
+      "correct_answer": "True",
+      "difficulty": "medium",
+      "category": "Incidents",
+      "explanation": "True. Despite rare outages, SkyTrain's moving-block system has prevented train-to-train collisions."
+    },
+    {
+      "id": "Q49",
+      "type": "TF",
+      "question_text": "The 2014 SkyTrain outages led TransLink to offer free transit tickets as compensation.",
+      "options": ["True", "False"],
+      "correct_answer": "True",
+      "difficulty": "medium",
+      "category": "Incidents",
+      "explanation": "True. After two major outages in July 2014, TransLink offered free tickets and commissioned an independent review."
+    },
+    {
+      "id": "Q50",
+      "type": "MC",
+      "question_text": "Which transit project did Metro Vancouver mayors cancel in favor of the Surrey-Langley SkyTrain extension?",
+      "options": ["Surrey LRT", "UBC Streetcar", "Burnaby Mountain Gondola", "Richmond Highway BRT"],
+      "correct_answer": "Surrey LRT",
+      "difficulty": "hard",
+      "category": "Policy",
+      "explanation": "In November 2018, the planned Surrey LRT was cancelled, and a decision was made to build SkyTrain along Fraser Hwy."
+    }
+  ],
+  "categories": {
+    "Stations": "Information about the various SkyTrain stations",
+    "Lines": "Information about the three SkyTrain lines",
+    "Timeline": "Historical events and important dates",
+    "Operations": "How SkyTrain works and is operated",
+    "Geography": "Locations and municipalities",
+    "Trivia": "Interesting and unique facts",
+    "Policy": "Decisions and future projects",
+    "Incidents": "Special events and issues",
+    "Ridership": "Data about SkyTrain usage"
+  },
+  "difficulties": {
+    "easy": "Basic questions suitable for all ages",
+    "medium": "Medium questions requiring general SkyTrain knowledge",
+    "hard": "Challenging questions for SkyTrain enthusiasts"
+  }
+}

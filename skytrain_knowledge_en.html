@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SkyTrain for Kids – Super Version (with Train Types)</title>
+  <meta name="description" content="Kid-friendly app about Vancouver SkyTrain: history, timeline, how it works, lines, trips, numbers, train types (Mark I–V, Canada Line), and future plans." />
+
+  <style>
+    :root{
+      --translink:#0060A9;
+      --ink:#0f172a; --muted:#475569; --bg:#f5f7fb; --card:#ffffff;
+      --expo:#123a7a;
+      --mill:#eab308;
+      --can:#06b6d4;
+      --accent:#7dd3fc; --border:#e2e8f0; --ok:#16a34a; --warn:#ca8a04;
+      --shadow: 0 10px 30px rgba(0,0,0,.06); --radius:20px;
+    }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; color:var(--ink); background:var(--bg); line-height:1.6}
+
+    header{position:sticky; top:0; z-index:20; background:linear-gradient(135deg,#e6f2fb 0%, #cde9ff 55%, #b2dbff 100%); border-bottom:1px solid var(--border); box-shadow:0 6px 18px rgba(0,96,169,.08)}
+    .wrap{max-width:1100px; margin:0 auto; padding:14px 16px}
+    h1{margin:4px 0 0; font-size:clamp(22px,4.2vw,36px); color:var(--translink)}
+    .sub{color:#0b4a6f; font-weight:600; font-size:clamp(14px,2.6vw,16px)}
+    nav.tabs{display:flex; gap:10px; flex-wrap:wrap; margin:10px 0 6px}
+    .tab-btn{border:1px solid #b7d9ff; color:#0b4a6f; background:#fff; padding:10px 14px; border-radius:999px; cursor:pointer; font-weight:600; transition:background .2s, transform .05s}
+    .tab-btn[aria-selected="true"]{background:#e6f2ff}
+    .tab-btn:active{transform:scale(.98)}
+
+    main .grid{display:grid; gap:16px}
+    @media (min-width:760px){ .grid-2{grid-template-columns:1fr 1fr} .grid-3{grid-template-columns:repeat(3,1fr)} }
+    .card{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px}
+    .section{display:none; animation:fade .2s ease} .section.active{display:block}
+    @keyframes fade{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
+
+    .line-tag{display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px; color:#fff; font-weight:800}
+    .expo{background:var(--expo)} .mill{background:var(--mill); color:#1f2937} .can{background:var(--can)}
+    .pill{display:inline-block; padding:2px 8px; border-radius:999px; background:#eef6ff; border:1px solid #cfe6ff; font-size:12px; margin-inline:4px}
+    .muted{color:var(--muted)} .small{font-size:13px} .ok{color:var(--ok); font-weight:700} .warn{color:var(--warn); font-weight:700}
+    .tip{display:flex; gap:10px; background:#ecfeff; border:1px solid #a5f3fc; padding:12px; border-radius:14px}
+    ul,ol{padding-inline-start:22px; margin:8px 0}
+
+    /* Timeline */
+    .timeline{position:relative; margin:8px 0 0 0; padding:0}
+    .timeline::before{content:""; position:absolute; left:12px; top:0; bottom:0; width:4px; background:#b7d9ff; border-radius:6px}
+    .timeline li{list-style:none; position:relative; margin:12px 0; padding-left:34px}
+    .dot{position:absolute; left:5px; top:.4em; width:14px; height:14px; background:var(--translink); border:2px solid #fff; outline:2px solid #9ed0ff; border-radius:50%}
+    .tag{display:inline-block; padding:2px 8px; border-radius:8px; background:#e8f3ff; border:1px solid #cfe6ff; font-size:12px; margin-left:6px}
+
+    /* Train placeholders */
+    .train-figure{display:flex; gap:12px; align-items:flex-start; background:#f8fbff; border:1px dashed #bcd9ff; border-radius:14px; padding:10px; margin:10px 0}
+    .train-figure img{width:100%; max-width:360px; aspect-ratio:16/9; object-fit:cover; background:#eef6ff; border-radius:10px}
+    .train-figure .note{font-size:12px; color:#0b4a6f}
+
+    /* Top button */
+    #topBtn{position:fixed; right:14px; bottom:14px; border:none; border-radius:999px; padding:12px 14px; box-shadow:var(--shadow); background:#fff; cursor:pointer}
+    footer{color:#64748b; text-align:center; font-size:12px; padding:28px 10px}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+    <!-- Back to app button -->
+    <div class="mb-3">
+      <a href="./index.html" 
+         class="inline-flex items-center gap-2 text-sm text-blue-700 hover:text-blue-900 transition-colors duration-200">
+        <span class="text-lg">←</span>
+        Back to Main App
+      </a>
+    </div>
+    <div class="wrap">
+      <h1>SkyTrain for Kids 🚈</h1>
+      <div class="sub">More knowledge, more games, timeline, and <span style="white-space:nowrap">train types</span> – TransLink style</div>
+      <nav class="tabs" role="tablist" aria-label="SkyTrain – Navigation">
+        <button class="tab-btn" aria-selected="true" data-target="what">What is it?</button>
+        <button class="tab-btn" aria-selected="false" data-target="story">Story & Timeline</button>
+        <button class="tab-btn" aria-selected="false" data-target="how">How does it work?</button>
+        <button class="tab-btn" aria-selected="false" data-target="lines">Lines & Colors</button>
+        <button class="tab-btn" aria-selected="false" data-target="trips">Cool Trips</button>
+        <button class="tab-btn" aria-selected="false" data-target="numbers">Friendly Numbers</button>
+        <button class="tab-btn" aria-selected="false" data-target="fleet">Train Types (Fleet)</button>
+        <button class="tab-btn" aria-selected="false" data-target="facts">Cool Facts</button>
+        <button class="tab-btn" aria-selected="false" data-target="future">What's Being Built?</button>
+        <button class="tab-btn" aria-selected="false" data-target="sources">Sources</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- What is it -->
+    <section id="what" class="section active">
+      <div class="grid grid-2">
+        <div class="card">
+          <h2>What is SkyTrain?</h2>
+          <p>SkyTrain is a fast city train that <span class="ok">runs by itself without a driver</span> on separated tracks – inside tunnels or on high bridges. The computer keeps distance, stops at stations precisely, and alerts about problems.</p>
+          <div class="tip"><div>💡</div><div>The system started in December <strong>1985</strong> and has been expanding ever since. Many tracks are elevated – that's why it's called "SkyTrain".</div></div>
+          <p class="small muted">General info summarized from TransLink/BCRTC sources.</p>
+        </div>
+        <div class="card">
+          <h2>Golden Rules for Young Riders</h2>
+          <ul>
+            <li>Stand behind the <strong>yellow line</strong>.</li>
+            <li>Let passengers <strong>exit first</strong>.</li>
+            <li>Hold the handrail on escalators, and keep <strong>quiet</strong> for announcements.</li>
+            <li>Look for stations together on the map and mark them in a "treasure hunt" game.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Story & Timeline -->
+    <section id="story" class="section">
+      <div class="card">
+        <h2>The Short Story</h2>
+        <p>Vancouver wanted fast, safe and clean transportation. In <strong>1985</strong> the system opened, and in <strong>1986</strong> during Expo 86 it got huge publicity. Since then, lines, stations and bridges have been added (including the SkyBridge over the Fraser River), and in <strong>2009</strong> the <em>Canada Line</em> opened to the airport.</p>
+      </div>
+      <div class="card">
+        <h2>SkyTrain Timeline</h2>
+        <ul class="timeline" id="timeline">
+          <li><span class="dot"></span><strong>1985</strong> – Operations begin (December). <span class="tag">History</span></li>
+          <li><span class="dot"></span><strong>1986</strong> – Expo 86: Expo Line in the spotlight. <span class="tag">Event</span></li>
+          <li><span class="dot"></span><strong>1990s</strong> – Expansions eastward; stations in Surrey and New West. <span class="tag">Network</span></li>
+          <li><span class="dot"></span><strong>2002–2016</strong> – Millennium Line, and later Coquitlam extension. <span class="tag">New Line</span></li>
+          <li><span class="dot"></span><strong>2009</strong> – <em>Canada Line</em> opens to YVR and Richmond. <span class="tag">PPP</span></li>
+          <li><span class="dot"></span><strong>2025</strong> – <em>Mark V</em> enters service on Expo Line. <span class="tag">New Fleet</span></li>
+          <li><span class="dot"></span><strong>2027 (target)</strong> – Broadway Subway (Millennium extension). <span class="tag">Under Construction</span></li>
+          <li><span class="dot"></span><strong>Late 2029 (target)</strong> – Surrey–Langley SkyTrain (Expo extension). <span class="tag">Under Construction</span></li>
+        </ul>
+        <p class="small muted">General dates for kids; see "Sources" for precise updates.</p>
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section id="how" class="section">
+      <div class="grid grid-2">
+        <div class="card">
+          <h2>How does the train "drive itself"?</h2>
+          <ul>
+            <li><strong>Smart computers</strong> and advanced signaling control spacing and speed.</li>
+            <li><strong>Sensors</strong> check where trains are located.</li>
+            <li><strong>Control center</strong> with people supervising 24/7 and helping in emergencies.</li>
+            <li>Everything runs on <strong>electricity</strong> – clean and relatively quiet.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h2>Stations & Accessibility</h2>
+          <ul>
+            <li>Elevators and ramps at most stations.</li>
+            <li>Colored signage by lines and voice announcements.</li>
+            <li><strong>Compass</strong> smart card for entry and exit gates.</li>
+          </ul>
+          <p class="small muted">Fares vary – check the "Sources" tab.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Lines & colors -->
+    <section id="lines" class="section">
+      <div class="grid grid-3">
+        <div class="card">
+          <div class="line-tag expo">Expo Line</div>
+          <p>Connects downtown Vancouver with Burnaby, New West and Surrey. Lots of bridges and views over the Fraser River.</p>
+          <ul>
+            <li>Example stations: Waterfront • Stadium–Chinatown • Metrotown • Surrey Central • King George</li>
+            <li>What you see from the window? Skyscrapers, river and SkyBridge.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="line-tag mill">Millennium Line</div>
+          <p>Loop route in north Burnaby and on to Coquitlam; connects to Commercial–Broadway and VCC–Clark.</p>
+          <ul>
+            <li>Example stations: VCC–Clark • Commercial–Broadway • Brentwood • Lougheed • Moody Centre • Lafarge Lake–Douglas</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="line-tag can">Canada Line</div>
+          <p>Connects downtown to <strong>YVR Airport ✈️</strong> and Richmond city.</p>
+          <ul>
+            <li>Example stations: Waterfront • Yaletown–Roundhouse • Oakridge–41st • Richmond–Brighouse • YVR–Airport</li>
+          </ul>
+        </div>
+      </div>
+      <p class="small muted">Colors and station names per official map.</p>
+    </section>
+
+    <!-- Cool trips -->
+    <section id="trips" class="section">
+      <div class="grid grid-2">
+        <div class="card">
+          <h2>Cool Trips by Line</h2>
+          <ul>
+            <li>🚀 <strong>Expo:</strong> Main Street–Science World – science museum.</li>
+            <li>🛍️ <strong>Expo:</strong> Metrotown – huge mall and cinema.</li>
+            <li>🌳 <strong>Millennium:</strong> Moody Centre – Rocky Point Park boardwalk.</li>
+            <li>✈️ <strong>Canada:</strong> YVR–Airport – see planes taking off.</li>
+          </ul>
+          <p class="small muted">Check opening hours in advance.</p>
+        </div>
+        <div class="card">
+          <h2>Treasure Hunt 🗺️</h2>
+          <div class="checklist" id="hunt">
+            <label><input type="checkbox" data-key="bridge"> Did we cross a high bridge?</label>
+            <label><input type="checkbox" data-key="tunnel"> Did we ride through a long tunnel?</label>
+            <label><input type="checkbox" data-key="airport"> Did we see ✈️ YVR–Airport station?</label>
+            <label><input type="checkbox" data-key="map"> Did we find our station on the map?</label>
+            <label><input type="checkbox" data-key="elev"> Did we take a station elevator?</label>
+          </div>
+          <p class="small muted">Checkmarks saved on device (localStorage).</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Friendly numbers -->
+    <section id="numbers" class="section">
+      <div class="grid grid-2">
+        <div class="card">
+          <h2>How Big? Kid-Style</h2>
+          <ul>
+            <li>There are <em>dozens</em> of stations – imagine a <strong>station trading card</strong> collection!</li>
+            <li>On a regular day – <em>hundreds of thousands</em> of trips.</li>
+            <li>During rush hour – a train can arrive every <strong>2–3</strong> minutes.</li>
+          </ul>
+          <p class="small muted">Exact numbers change year to year – see "Sources".</p>
+        </div>
+        <div class="card">
+          <h2>Tickets & Some Rules</h2>
+          <ul>
+            <li><strong>Compass</strong> card or single-use ticket loaded.</li>
+            <li>Price depends on Zones and there are child discounts.</li>
+            <li>Don't forget to "Tap-out" on exit.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Train types (fleet) -->
+    <section id="fleet" class="section">
+      <div class="grid grid-2">
+        <!-- Mark I -->
+        <div class="card">
+          <h2>Mark I – The Veteran</h2>
+          <div class="train-figure">
+            <img src="./img/Skytrain_Mk_I.jpg" alt="Mark I" />
+          </div>
+          <ul>
+            <li><strong>In service since:</strong> 1985.</li>
+            <li><strong>What does it look like?</strong> Short cars, usually sitting along the sides.</li>
+            <li><strong>How many cars?</strong> Usually <em>6 cars</em> per train ("married pairs").</li>
+            <li><strong>Where does it run?</strong> Expo/Millennium lines (mainly Expo).</li>
+            <li class="small muted">Facts: car ≈ ~12.7m; two doors per side; upgrade/refresh project done in previous decade.</li>
+          </ul>
+        </div>
+
+        <!-- Mark II -->
+        <div class="card">
+          <h2>Mark II – The Long "Married Pair"</h2>
+          <div class="train-figure">
+            <img src="./img/SkyTrain_Mark_II.jpg" alt="Mark II" />
+          </div>
+          <ul>
+            <li><strong>In service since:</strong> Early 2000s (various deliveries).</li>
+            <li><strong>What does it look like?</strong> Two units connected ("married pair") with passage in middle.</li>
+            <li><strong>How many cars?</strong> Usually <em>4 cars</em> (two pairs connected).</li>
+            <li><strong>Where does it run?</strong> Expo and Millennium.</li>
+            <li class="small muted">Facts: connected pair ≈ 33.4m; 3 doors per side; built by Bombardier.</li>
+          </ul>
+        </div>
+
+        <!-- Mark III -->
+        <div class="card">
+          <h2>Mark III – Modern with Big Windows</h2>
+          <div class="train-figure">
+            <img src="./img/SkyTrain_Mark_III.jpg" alt="Mark III" />
+          </div>
+          <ul>
+            <li><strong>In service since:</strong> 2016 (deliveries until ~2020).</li>
+            <li><strong>What does it look like?</strong> Modern design, large spaces and convenient handholds.</li>
+            <li><strong>How many cars?</strong> Usually <em>4 cars</em>.</li>
+            <li><strong>Where does it run?</strong> Mainly Expo Line.</li>
+            <li class="small muted">Facts: similar length to Mark II; updated propulsion/control systems.</li>
+          </ul>
+        </div>
+
+        <!-- Mark V -->
+        <div class="card">
+          <h2>Mark V – The Newest 🚀</h2>
+          <div class="train-figure">
+            <img src="./img/SkyTrain_Mark_V.jpg" alt="Mark V (Alstom)" />
+          </div>
+          <ul>
+            <li><strong>In service since:</strong> 2025 (entered service on Expo Line).</li>
+            <li><strong>What does it look like?</strong> Long train with continuous walkways throughout, new design and improved AC.</li>
+            <li><strong>How many cars?</strong> <em>5 fixed cars</em> per train.</li>
+            <li><strong>Approximate capacity:</strong> Up to ~672 passengers per train (about 25% higher than 4-car Mark III).</li>
+            <li><strong>What for?</strong> To increase capacity and prepare for Surrey–Langley extension.</li>
+          </ul>
+        </div>
+
+        <!-- Canada Line EMU -->
+        <div class="card">
+          <h2>Canada Line – Hyundai Rotem Trains (EMU)</h2>
+          <div class="train-figure">
+            <img src="./img/Hyundai_Rotem_EMU.jpg" alt="Canada Line Hyundai Rotem EMU" />
+          </div>
+          <ul>
+            <li><strong>In service since:</strong> 2009 (second delivery 2019).</li>
+            <li><strong>What does it look like?</strong> Stainless steel body, two cars connected (can link to 4).</li>
+            <li><strong>How many cars?</strong> <em>2 cars</em> per set (sometimes linked to pairs = 4).</li>
+            <li><strong>Set length:</strong> ≈ ~41m; <strong>width:</strong> ≈ 3.0m.</li>
+            <li><strong>Capacity per set:</strong> ≈ 340 passengers (~41 seats).</li>
+            <li class="small muted">Canada Line operated by ProTrans BC; 750V DC power in third rail.</li>
+          </ul>
+        </div>
+      </div>
+      <p class="small muted">Numbers rounded and kid-friendly; see "Sources" for full technical details.</p>
+    </section>
+
+    <!-- Cool facts -->
+    <section id="facts" class="section">
+      <div class="grid grid-2">
+        <div class="card">
+          <h2>Cool Facts 🤩</h2>
+          <ul>
+            <li><strong>Automated</strong> system one of the oldest in the world (since 1985).</li>
+            <li>High bridges, tunnels, and great views – hence "SkyTrain".</li>
+            <li>Control center supervises everything 24/7.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h2>Smart Questions for Kids</h2>
+          <ol>
+            <li>How many cars did we count on the train we rode?</li>
+            <li>Where do you see the river/planes best?</li>
+            <li>What's the difference between Mark II and Mark V?</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- What's being built -->
+    <section id="future" class="section">
+      <div class="grid">
+        <div class="card">
+          <h2>What's Being Built Now? 🏗️</h2>
+          <ul>
+            <li><strong>Broadway Subway</strong> – Millennium Line extension westward under Broadway. Current target: <strong>2027</strong>.</li>
+            <li><strong>Surrey–Langley SkyTrain</strong> – Expo Line extension along Fraser Hwy (≈16 km, 8 stations). Service target: <strong>late 2029</strong>.</li>
+          </ul>
+          <p class="small muted">Target times may be updated – check project websites.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sources -->
+    <section id="sources" class="section">
+      <div class="card">
+        <h2>Reliable Sources (Official/Primary)</h2>
+        <ul>
+          <li>🗺️ Network map – <a href="https://www.translink.ca/-/media/translink/documents/schedules-and-maps/transit-system-maps/system-maps/skytrain_network_map.pdf" target="_blank" rel="noopener">TransLink – SkyTrain Network Map (PDF)</a></li>
+          <li>🗺️ Interactive map – <a href="https://www.translink.ca/schedules-and-maps/interactive-system-map" target="_blank" rel="noopener">TransLink – Interactive System Map</a></li>
+          <li>🏢 BCRTC/TransLink – history, Mark II/III train models – <a href="https://www.translink.ca/about-us/about-translink/operating-companies/british-columbia-rapid-transit-company" target="_blank" rel="noopener">Operating company page</a></li>
+          <li>🆕 Mark V enters service (2025) – <a href="https://www.translink.ca/news/2025/july/a%20new%20era%20for%20skytrain%20the%20mark%20v%20rolls%20into%20service" target="_blank" rel="noopener">TransLink News</a> | <a href="https://www.alstom.com/press-releases-news/2025/7/alstoms-first-new-skytrain-trains-enter-commercial-service-vancouver" target="_blank" rel="noopener">Alstom PR</a></li>
+          <li>🚇 Canada Line – Hyundai Rotem train data (length/width/capacity): <a href="https://en.wikipedia.org/wiki/Canada_Line#Rolling_stock" target="_blank" rel="noopener">Data summary</a> + <a href="https://cptdb.ca/wiki/index.php/Hyundai_Rotem_Canada_Line_EMU" target="_blank" rel="noopener">CPTDB Specs</a></li>
+          <li>📚 Comprehensive SkyTrain fleet review (all models) – <a href="https://en.wikipedia.org/wiki/SkyTrain_(Vancouver)_rolling_stock" target="_blank" rel="noopener">Dedicated fleet entry</a></li>
+          <li>🏗️ Broadway Subway – <a href="https://www.broadwaysubway.ca/" target="_blank" rel="noopener">Province of BC</a> | <a href="https://www.translink.ca/plans-and-projects/projects/rapid-transit-projects/broadway-subway-project" target="_blank" rel="noopener">TransLink</a> | <a href="https://vancouver.ca/streets-transportation/broadway-subway-project.aspx" target="_blank" rel="noopener">City of Vancouver</a></li>
+          <li>🏗️ Surrey–Langley SkyTrain – <a href="https://surreylangleyskytrain.gov.bc.ca/" target="_blank" rel="noopener">Official Project</a> | <a href="https://www.ticorp.ca/surrey-langley-skytrain/" target="_blank" rel="noopener">TI Corp</a></li>
+        </ul>
+        <p class="small muted">Updated to August 2025. For images – please add files/links with appropriate license manually.</p>
+      </div>
+    </section>
+
+    <footer>© Kid-friendly content. Before going on a trip – check hours, fares and changes on source websites.</footer>
+  </main>
+
+  <button id="topBtn" aria-label="Back to top" title="Top">⬆️</button>
+
+  <script>
+    // Navigation between tabs
+    const tabs = document.querySelectorAll('.tab-btn');
+    const sections = document.querySelectorAll('.section');
+    tabs.forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        tabs.forEach(b=>b.setAttribute('aria-selected','false'));
+        btn.setAttribute('aria-selected','true');
+        const target = btn.dataset.target;
+        sections.forEach(s=>s.classList.toggle('active', s.id===target));
+        scrollTo({top:0, behavior:'smooth'});
+      });
+    });
+
+    // Save "treasure hunt" checklist
+    const huntBox = document.getElementById('hunt');
+    if(huntBox){
+      const boxes = huntBox.querySelectorAll('input[type="checkbox"][data-key]');
+      boxes.forEach(cb=>{
+        const k = 'hunt_'+cb.dataset.key;
+        cb.checked = localStorage.getItem(k)==='1';
+        cb.addEventListener('change', ()=> localStorage.setItem(k, cb.checked?'1':'0'));
+      });
+    }
+
+    // Timeline – potential for collapse/expand if adding long descriptions
+    const timeline = document.getElementById('timeline');
+    if(timeline){
+      timeline.addEventListener('click', (e)=>{
+        const li = e.target.closest('li');
+        if(li && li.dataset.long==="1"){ li.classList.toggle('open'); }
+      });
+    }
+
+    // Top button
+    const topBtn = document.getElementById('topBtn');
+    addEventListener('scroll', ()=>{ topBtn.style.opacity = (scrollY>200)?'1':'0'; }, {passive:true});
+    topBtn.addEventListener('click', ()=> scrollTo({top:0, behavior:'smooth'}));
+  </script>
+</body>
+</html>

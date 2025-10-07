@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SkyTrain Quiz for Kids - 50 Questions</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#0060A9">
+  <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+    .card-hover:hover{transform:translateY(-4px); transition:all 0.3s ease;}
+    .quiz-option{transition:all 0.3s ease;cursor:pointer;}
+    .quiz-option:hover{transform:scale(1.02);background:#f0f9ff;}
+    .quiz-option.selected{background:#dbeafe;border:2px solid #3b82f6;transform:scale(1.02);}
+    .quiz-option.correct{background:#dcfce7;border:2px solid #16a34a;}
+    .quiz-option.incorrect{background:#fef2f2;border:2px solid #dc2626;}
+    .progress-bar{transition:width 0.5s ease;}
+    .celebration{animation:bounce 0.6s ease;}
+    @keyframes bounce{0%{transform:scale(1)} 50%{transform:scale(1.2)} 100%{transform:scale(1)}}
+    .fade-in{animation:fadeIn 0.5s ease;}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)}}
+    .loading-spinner{border:4px solid #f3f4f6;border-top:4px solid #3b82f6;border-radius:50%;width:32px;height:32px;animation:spin 1s linear infinite;margin:0 auto;}
+    @keyframes spin{0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)}}
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-cyan-50">
+
+  <!-- Header -->
+  <header class="bg-white shadow-lg">
+    <div class="max-w-4xl mx-auto px-4 py-6">
+      <div class="flex items-center justify-between">
+        <button onclick="goHome()" class="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors">
+          <span class="text-xl">🏠</span>
+          <span class="font-medium">Home</span>
+        </button>
+        <div class="text-center">
+          <h1 class="text-3xl font-bold text-gray-800">🚇 SkyTrain Quiz</h1>
+          <p class="text-gray-600">Test your knowledge about Vancouver's SkyTrain!</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">🎯</span>
+          <span class="text-lg font-bold text-blue-600" id="currentScore">0</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 py-8">
+    <!-- Loading screen -->
+    <div id="loadingScreen" class="text-center">
+      <div class="bg-white rounded-2xl shadow-lg p-8">
+        <div class="loading-spinner mb-4"></div>
+        <h2 class="text-xl font-bold text-gray-800 mb-2">Loading questions...</h2>
+        <p class="text-gray-600">We're preparing 50 exciting questions for you!</p>
+      </div>
+    </div>
+
+    <!-- Start screen -->
+    <div id="startScreen" class="hidden text-center">
+      <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
+        <div class="text-6xl mb-6">🧠</div>
+        <h2 class="text-3xl font-bold text-gray-800 mb-4">Welcome to the SkyTrain Quiz!</h2>
+        <p class="text-gray-600 mb-8 leading-relaxed">
+          50 exciting questions about Vancouver's SkyTrain system. 
+          Choose your difficulty level and number of questions and start testing your knowledge!
+        </p>
+
+        <!-- Settings selection -->
+        <div class="grid md:grid-cols-2 gap-6 mb-8">
+          <!-- Difficulty level -->
+          <div>
+            <h3 class="text-lg font-bold mb-3">Difficulty level:</h3>
+            <div class="space-y-3">
+              <button onclick="selectDifficulty('easy')" class="difficulty-btn w-full p-4 rounded-xl border-2 border-green-200 bg-green-50 hover:bg-green-100 transition-colors">
+                <div class="text-green-600 text-2xl mb-1">😊</div>
+                <div class="font-bold text-green-800">Easy</div>
+                <div class="text-sm text-green-700">Basic and fun questions</div>
+                <div class="text-xs text-green-600 mt-1" id="easyCount">0 questions</div>
+              </button>
+              <button onclick="selectDifficulty('medium')" class="difficulty-btn w-full p-4 rounded-xl border-2 border-yellow-200 bg-yellow-50 hover:bg-yellow-100 transition-colors">
+                <div class="text-yellow-600 text-2xl mb-1">🤔</div>
+                <div class="font-bold text-yellow-800">Medium</div>
+                <div class="text-sm text-yellow-700">More interesting questions</div>
+                <div class="text-xs text-yellow-600 mt-1" id="mediumCount">0 questions</div>
+              </button>
+              <button onclick="selectDifficulty('hard')" class="difficulty-btn w-full p-4 rounded-xl border-2 border-red-200 bg-red-50 hover:bg-red-100 transition-colors">
+                <div class="text-red-600 text-2xl mb-1">🤯</div>
+                <div class="font-bold text-red-800">Hard</div>
+                <div class="text-sm text-red-700">Challenge for experts!</div>
+                <div class="text-xs text-red-600 mt-1" id="hardCount">0 questions</div>
+              </button>
+              <button onclick="selectDifficulty('all')" class="difficulty-btn w-full p-4 rounded-xl border-2 border-purple-200 bg-purple-50 hover:bg-purple-100 transition-colors">
+                <div class="text-purple-600 text-2xl mb-1">🌈</div>
+                <div class="font-bold text-purple-800">All Mixed</div>
+                <div class="text-sm text-purple-700">Questions from all levels</div>
+                <div class="text-xs text-purple-600 mt-1" id="allCount">50 questions</div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Number of questions -->
+          <div>
+            <h3 class="text-lg font-bold mb-3">Number of questions:</h3>
+            <div class="space-y-3">
+              <button onclick="selectQuestionCount(10)" class="w-full p-3 rounded-lg border-2 border-blue-200 bg-blue-50 hover:bg-blue-100 font-bold text-blue-800">
+                10 questions (Quick)
+              </button>
+              <button onclick="selectQuestionCount(20)" class="w-full p-3 rounded-lg border-2 border-blue-200 bg-blue-50 hover:bg-blue-100 font-bold text-blue-800">
+                20 questions (Regular)
+              </button>
+              <button onclick="selectQuestionCount(30)" class="w-full p-3 rounded-lg border-2 border-blue-200 bg-blue-50 hover:bg-blue-100 font-bold text-blue-800">
+                30 questions (Long)
+              </button>
+              <button onclick="selectQuestionCount(50)" class="w-full p-3 rounded-lg border-2 border-blue-200 bg-blue-50 hover:bg-blue-100 font-bold text-blue-800">
+                50 questions (Full!)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <button id="startQuizBtn" onclick="startQuiz()" disabled class="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-8 py-3 rounded-xl font-bold text-lg transition-colors disabled:cursor-not-allowed">
+          🚀 Start Quiz!
+        </button>
+        <p class="text-sm text-gray-500 mt-4">Total <span id="totalQuestions">50</span> questions available</p>
+      </div>
+    </div>
+
+    <!-- Quiz screen -->
+    <div id="quizScreen" class="hidden">
+      <!-- Progress bar -->
+      <div class="bg-white rounded-xl shadow-lg p-4 mb-6">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-sm font-medium text-gray-600">Progress</span>
+          <span class="text-sm font-medium text-gray-600">Question <span id="currentQuestionNum">1</span> of <span id="totalQuestionsDisplay">10</span></span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-3">
+          <div id="progressBar" class="progress-bar bg-blue-600 h-3 rounded-full" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Question -->
+      <div id="questionCard" class="bg-white rounded-2xl shadow-lg p-8 mb-6 fade-in">
+        <div class="mb-6">
+          <div class="flex items-center gap-2 mb-4">
+            <span id="questionCategory" class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium"></span>
+            <span id="questionDifficulty" class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium"></span>
+          </div>
+          <h2 id="questionText" class="text-2xl font-bold text-gray-800 leading-relaxed"></h2>
+        </div>
+
+        <!-- Answer options -->
+        <div id="optionsContainer" class="space-y-4">
+          <!-- Options will be added dynamically -->
+        </div>
+
+        <!-- Explanation -->
+        <div id="explanationContainer" class="hidden mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h4 class="font-bold text-blue-800 mb-2">💡 Explanation:</h4>
+          <p id="explanationText" class="text-blue-700"></p>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="flex gap-4 mt-8">
+          <button id="submitBtn" onclick="submitAnswer()" disabled class="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white py-3 px-6 rounded-lg font-bold disabled:cursor-not-allowed">
+            ✅ Submit Answer
+          </button>
+          <button id="nextBtn" onclick="nextQuestion()" class="hidden flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-bold">
+            ➡️ Next Question
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results screen -->
+    <div id="resultsScreen" class="hidden text-center">
+      <div class="bg-white rounded-2xl shadow-lg p-8">
+        <div id="resultEmoji" class="text-8xl mb-4">🎉</div>
+        <h2 id="resultTitle" class="text-3xl font-bold mb-4">Great job!</h2>
+        <p id="resultMessage" class="text-xl text-gray-600 mb-8">You finished the quiz!</p>
+
+        <!-- Statistics -->
+        <div class="grid grid-cols-3 gap-4 mb-8">
+          <div class="bg-green-50 p-4 rounded-lg">
+            <div class="text-2xl font-bold text-green-600" id="correctCount">0</div>
+            <div class="text-sm text-green-800">Correct answers</div>
+          </div>
+          <div class="bg-red-50 p-4 rounded-lg">
+            <div class="text-2xl font-bold text-red-600" id="incorrectCount">0</div>
+            <div class="text-sm text-red-800">Wrong answers</div>
+          </div>
+          <div class="bg-blue-50 p-4 rounded-lg">
+            <div class="text-2xl font-bold text-blue-600" id="accuracyPercent">0%</div>
+            <div class="text-sm text-blue-800">Accuracy</div>
+          </div>
+        </div>
+
+        <!-- Achievements -->
+        <div id="achievementsContainer" class="mb-8">
+          <h3 class="text-lg font-bold text-gray-800 mb-4">Your achievements:</h3>
+          <div id="achievementBadges" class="flex flex-wrap justify-center gap-2"></div>
+        </div>
+
+        <!-- Answer review -->
+        <div id="reviewContainer" class="mb-8 max-h-64 overflow-y-auto">
+          <h3 class="text-lg font-bold text-gray-800 mb-4">Answer Review:</h3>
+          <div id="reviewList" class="space-y-2 text-left"></div>
+        </div>
+
+        <div class="space-y-4">
+          <button onclick="restartQuiz()" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-bold">
+            🔄 New Quiz
+          </button>
+          <button onclick="goHome()" class="bg-gray-600 hover:bg-gray-700 text-white px-8 py-3 rounded-lg font-bold">
+            🏠 Back to Home
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error screen -->
+    <div id="errorScreen" class="hidden text-center">
+      <div class="bg-white rounded-2xl shadow-lg p-8">
+        <div class="text-6xl mb-4">😞</div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Oops! Something went wrong</h2>
+        <p class="text-gray-600 mb-6">We couldn't load the questions. Check your internet connection and try again.</p>
+        <button onclick="location.reload()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-bold">
+          🔄 Try Again
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Global variables
+    let allQuestions = [];
+    let currentQuiz = null;
+    let quizSettings = {
+      difficulty: null,
+      questionCount: null
+    };
+
+    // Load questions
+    async function loadQuestions() {
+      try {
+        const response = await fetch('./data/questions.json');
+        if (!response.ok) {
+          throw new Error('Failed to load questions');
+        }
+        const data = await response.json();
+        allQuestions = data.questions;
+        
+        // Update question counts by difficulty
+        updateQuestionCounts();
+        
+        // Show start screen
+        document.getElementById('loadingScreen').classList.add('hidden');
+        document.getElementById('startScreen').classList.remove('hidden');
+        
+      } catch (error) {
+        console.error('Error loading questions:', error);
+        document.getElementById('loadingScreen').classList.add('hidden');
+        document.getElementById('errorScreen').classList.remove('hidden');
+      }
+    }
+
+    // Update question counts
+    function updateQuestionCounts() {
+      const counts = {
+        easy: allQuestions.filter(q => q.difficulty === 'easy').length,
+        medium: allQuestions.filter(q => q.difficulty === 'medium').length,
+        hard: allQuestions.filter(q => q.difficulty === 'hard').length
+      };
+      
+      document.getElementById('easyCount').textContent = `${counts.easy} questions`;
+      document.getElementById('mediumCount').textContent = `${counts.medium} questions`;
+      document.getElementById('hardCount').textContent = `${counts.hard} questions`;
+      document.getElementById('totalQuestions').textContent = allQuestions.length;
+    }
+
+    // Select difficulty
+    function selectDifficulty(difficulty) {
+      quizSettings.difficulty = difficulty;
+      
+      // Update visual
+      document.querySelectorAll('.difficulty-btn').forEach(btn => {
+        btn.classList.remove('ring-4', 'ring-blue-300');
+      });
+      event.target.closest('.difficulty-btn').classList.add('ring-4', 'ring-blue-300');
+      
+      updateStartButton();
+    }
+
+    // Select question count
+    function selectQuestionCount(count) {
+      quizSettings.questionCount = count;
+      
+      // Update visual
+      document.querySelectorAll('button[onclick^="selectQuestionCount"]').forEach(btn => {
+        btn.classList.remove('ring-4', 'ring-blue-300');
+      });
+      event.target.classList.add('ring-4', 'ring-blue-300');
+      
+      updateStartButton();
+    }
+
+    // Update start button
+    function updateStartButton() {
+      const startBtn = document.getElementById('startQuizBtn');
+      if (quizSettings.difficulty && quizSettings.questionCount) {
+        startBtn.disabled = false;
+      }
+    }
+
+    // Start quiz
+    function startQuiz() {
+      // Filter questions by settings
+      let filteredQuestions = allQuestions.filter(q => {
+        if (quizSettings.difficulty === 'all') return true;
+        return q.difficulty === quizSettings.difficulty;
+      });
+
+      // If not enough questions, add from others
+      if (filteredQuestions.length < quizSettings.questionCount) {
+        const additionalQuestions = allQuestions.filter(q => 
+          !filteredQuestions.includes(q)
+        );
+        filteredQuestions = filteredQuestions.concat(additionalQuestions);
+      }
+
+      // Shuffle and select required number
+      filteredQuestions = shuffleArray(filteredQuestions).slice(0, quizSettings.questionCount);
+
+      currentQuiz = {
+        questions: filteredQuestions,
+        currentIndex: 0,
+        score: 0,
+        answers: []
+      };
+
+      // Update interface
+      document.getElementById('startScreen').classList.add('hidden');
+      document.getElementById('quizScreen').classList.remove('hidden');
+      document.getElementById('totalQuestionsDisplay').textContent = currentQuiz.questions.length;
+
+      showQuestion();
+    }
+
+    // Show question
+    function showQuestion() {
+      const question = currentQuiz.questions[currentQuiz.currentIndex];
+      const questionNum = currentQuiz.currentIndex + 1;
+
+      // Update progress bar
+      document.getElementById('currentQuestionNum').textContent = questionNum;
+      const progress = (questionNum / currentQuiz.questions.length) * 100;
+      document.getElementById('progressBar').style.width = progress + '%';
+      document.getElementById('currentScore').textContent = currentQuiz.score;
+
+      // Update question content
+      document.getElementById('questionCategory').textContent = question.category;
+      document.getElementById('questionDifficulty').textContent = getDifficultyName(question.difficulty);
+      document.getElementById('questionText').textContent = question.question_text;
+
+      // Reset interface
+      document.getElementById('optionsContainer').innerHTML = '';
+      document.getElementById('explanationContainer').classList.add('hidden');
+      document.getElementById('submitBtn').classList.remove('hidden');
+      document.getElementById('nextBtn').classList.add('hidden');
+      document.getElementById('submitBtn').disabled = true;
+
+      // Create answer options
+      createAnswerOptions(question);
+    }
+
+    // Create answer options
+    function createAnswerOptions(question) {
+      const container = document.getElementById('optionsContainer');
+      
+      question.options.forEach((option, index) => {
+        const button = document.createElement('button');
+        button.className = 'quiz-option w-full p-4 rounded-lg border-2 border-gray-200 text-left font-medium';
+        button.innerHTML = `
+          <div class="flex items-center gap-3">
+            <span class="text-blue-600 font-bold">${String.fromCharCode(65 + index)}</span>
+            <span>${option}</span>
+          </div>
+        `;
+        button.onclick = () => selectOption(button, option);
+        container.appendChild(button);
+      });
+    }
+
+    // Select option
+    function selectOption(button, value) {
+      // Reset previous selections
+      document.querySelectorAll('.quiz-option').forEach(opt => opt.classList.remove('selected'));
+      
+      // Mark new selection
+      button.classList.add('selected');
+      button.setAttribute('data-answer', value);
+      
+      // Enable submit button
+      document.getElementById('submitBtn').disabled = false;
+    }
+
+    // Submit answer
+    function submitAnswer() {
+      const question = currentQuiz.questions[currentQuiz.currentIndex];
+      const selectedOption = document.querySelector('.quiz-option.selected');
+      
+      if (!selectedOption) return;
+      
+      const userAnswer = selectedOption.getAttribute('data-answer');
+      const isCorrect = userAnswer === question.correct_answer;
+
+      // Update score
+      if (isCorrect) {
+        currentQuiz.score += getDifficultyPoints(question.difficulty);
+      }
+
+      // Save answer
+      currentQuiz.answers.push({
+        question: question.question_text,
+        userAnswer: userAnswer,
+        correctAnswer: question.correct_answer,
+        isCorrect: isCorrect,
+        explanation: question.explanation,
+        category: question.category,
+        difficulty: question.difficulty
+      });
+
+      // Show visual result
+      showAnswerResult(isCorrect, question.correct_answer);
+
+      // Show explanation
+      if (question.explanation) {
+        document.getElementById('explanationText').textContent = question.explanation;
+        document.getElementById('explanationContainer').classList.remove('hidden');
+      }
+
+      // Hide submit button and show next button
+      document.getElementById('submitBtn').classList.add('hidden');
+      document.getElementById('nextBtn').classList.remove('hidden');
+    }
+
+    // Show answer result
+    function showAnswerResult(isCorrect, correctAnswer) {
+      const options = document.querySelectorAll('.quiz-option');
+      
+      options.forEach(option => {
+        const answerText = option.getAttribute('data-answer');
+        if (answerText === correctAnswer) {
+          option.classList.add('correct');
+        } else if (option.classList.contains('selected') && !isCorrect) {
+          option.classList.add('incorrect');
+        }
+        option.style.pointerEvents = 'none';
+      });
+
+      // Celebration animation if correct
+      if (isCorrect) {
+        document.getElementById('questionCard').classList.add('celebration');
+        setTimeout(() => {
+          document.getElementById('questionCard').classList.remove('celebration');
+        }, 600);
+      }
+    }
+
+    // Next question
+    function nextQuestion() {
+      currentQuiz.currentIndex++;
+      
+      if (currentQuiz.currentIndex < currentQuiz.questions.length) {
+        showQuestion();
+      } else {
+        showResults();
+      }
+    }
+
+    // Show results
+    function showResults() {
+      const correct = currentQuiz.answers.filter(a => a.isCorrect).length;
+      const total = currentQuiz.answers.length;
+      const accuracy = Math.round((correct / total) * 100);
+
+      // Update results
+      document.getElementById('correctCount').textContent = correct;
+      document.getElementById('incorrectCount').textContent = total - correct;
+      document.getElementById('accuracyPercent').textContent = accuracy + '%';
+
+      // Message and emoji based on performance
+      updateResultMessage(accuracy);
+      
+      // Show achievement badges
+      showAchievements(accuracy, correct, total);
+      
+      // Answer review
+      showAnswerReview();
+
+      // Switch to results screen
+      document.getElementById('quizScreen').classList.add('hidden');
+      document.getElementById('resultsScreen').classList.remove('hidden');
+    }
+
+    // Update result message
+    function updateResultMessage(accuracy) {
+      const emoji = document.getElementById('resultEmoji');
+      const title = document.getElementById('resultTitle');
+      const message = document.getElementById('resultMessage');
+
+      if (accuracy >= 90) {
+        emoji.textContent = '🏆';
+        title.textContent = 'Amazing! You are a SkyTrain expert!';
+        message.textContent = 'Excellent performance! You really know everything about SkyTrain!';
+      } else if (accuracy >= 70) {
+        emoji.textContent = '🎉';
+        title.textContent = 'Great job!';
+        message.textContent = 'Very good performance! You have extensive knowledge about SkyTrain!';
+      } else if (accuracy >= 50) {
+        emoji.textContent = '😊';
+        title.textContent = 'Not bad at all!';
+        message.textContent = 'Good start! A bit more practice and you\'ll be an expert!';
+      } else {
+        emoji.textContent = '🤗';
+        title.textContent = 'Excellent first try!';
+        message.textContent = 'Every beginning is hard! Try again and you\'ll improve!';
+      }
+    }
+
+    // Show achievement badges
+    function showAchievements(accuracy, correct, total) {
+      const container = document.getElementById('achievementBadges');
+      container.innerHTML = '';
+
+      const achievements = [];
+
+      if (accuracy === 100) achievements.push({ text: '💯 Perfect!', color: 'gold' });
+      if (accuracy >= 90) achievements.push({ text: '🌟 Expert', color: 'yellow' });
+      if (accuracy >= 70) achievements.push({ text: '🎯 Sharp Eye', color: 'blue' });
+      if (correct >= 10) achievements.push({ text: '🔥 Ten Correct!', color: 'red' });
+      if (total >= 30) achievements.push({ text: '💪 Patient', color: 'green' });
+      if (currentQuiz.questions.some(q => q.difficulty === 'hard')) {
+        achievements.push({ text: '🧠 Hard Challenge', color: 'purple' });
+      }
+
+      achievements.forEach(achievement => {
+        const badge = document.createElement('span');
+        badge.className = `inline-block px-3 py-1 rounded-full text-sm font-bold bg-${achievement.color}-100 text-${achievement.color}-800`;
+        badge.textContent = achievement.text;
+        container.appendChild(badge);
+      });
+    }
+
+    // Answer review
+    function showAnswerReview() {
+      const container = document.getElementById('reviewList');
+      container.innerHTML = '';
+
+      currentQuiz.answers.forEach((answer, index) => {
+        const item = document.createElement('div');
+        item.className = `p-3 rounded-lg border-2 ${answer.isCorrect ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`;
+        
+        item.innerHTML = `
+          <div class="flex items-center gap-2 mb-1">
+            <span class="text-lg">${answer.isCorrect ? '✅' : '❌'}</span>
+            <span class="font-medium">${answer.category}</span>
+            <span class="text-xs bg-gray-200 px-2 py-1 rounded">${getDifficultyName(answer.difficulty)}</span>
+          </div>
+          <div class="text-sm text-gray-700 mb-1">${answer.question}</div>
+          <div class="text-xs">
+            <span class="${answer.isCorrect ? 'text-green-700' : 'text-red-700'}">
+              Your answer: ${answer.userAnswer}
+            </span>
+            ${!answer.isCorrect ? `<br><span class="text-green-700">Correct answer: ${answer.correctAnswer}</span>` : ''}
+          </div>
+        `;
+        
+        container.appendChild(item);
+      });
+    }
+
+    // Helper functions
+    function getDifficultyName(difficulty) {
+      const names = {
+        easy: 'Easy',
+        medium: 'Medium', 
+        hard: 'Hard'
+      };
+      return names[difficulty] || difficulty;
+    }
+
+    function getDifficultyPoints(difficulty) {
+      const points = {
+        easy: 1,
+        medium: 2,
+        hard: 3
+      };
+      return points[difficulty] || 1;
+    }
+
+    function shuffleArray(array) {
+      const shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
+
+    // Restart
+    function restartQuiz() {
+      currentQuiz = null;
+      quizSettings = { difficulty: null, questionCount: null };
+      
+      // Reset interface
+      document.querySelectorAll('.ring-4').forEach(el => el.classList.remove('ring-4', 'ring-blue-300'));
+      document.getElementById('startQuizBtn').disabled = true;
+      document.getElementById('currentScore').textContent = '0';
+      
+      // Back to start screen
+      document.getElementById('resultsScreen').classList.add('hidden');
+      document.getElementById('startScreen').classList.remove('hidden');
+    }
+
+    // Go home
+    function goHome() {
+      window.location.href = './index.html';
+    }
+
+    // Initial load
+    window.addEventListener('load', loadQuestions);
+  </script>
+</body>
+</html>

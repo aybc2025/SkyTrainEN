@@ -1,0 +1,1269 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Route Calculator - Vancouver Map for Kids</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#0060A9">
+  <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  
+  <style>
+    body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial}
+    .disabled{opacity:0.5;cursor:not-allowed}
+    .difficulty-btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+    .card-hover{transition:all 0.3s ease}
+    .step-animation{animation:slideInRight 0.5s ease-out forwards}
+    @keyframes slideInRight{from{opacity:0;transform:translateX(50px)}to{opacity:1;transform:translateX(0)}}
+    
+    .expo-bg{background-color:#0060A9}
+    .millennium-bg{background-color:#FED100}
+    .canada-bg{background-color:#009AC8}
+    .expo-gradient{background:linear-gradient(135deg,#0060A9,#004A87)}
+    .millennium-gradient{background:linear-gradient(135deg,#FED100,#E6B800)}
+    .canada-gradient{background:linear-gradient(135deg,#009AC8,#007AA3)}
+    .transfer-bg{background:linear-gradient(135deg,#6B7280,#4B5563)}
+    
+    .route-step {
+      border-left: 4px solid transparent;
+      transition: all 0.3s ease;
+    }
+    .route-step.expo { border-left-color: #0060A9; }
+    .route-step.millennium { border-left-color: #FED100; }
+    .route-step.canada { border-left-color: #009AC8; }
+    .route-step.transfer { border-left-color: #f59e0b; }
+    
+    .line-filter{transition:all 0.3s ease;cursor:pointer}
+    .line-filter.active{transform:scale(1.05);box-shadow:0 4px 12px rgba(0,0,0,0.2)}
+    
+    .leaflet-container{border-radius:12px}
+    #mapContainer{transition:all 0.5s ease}
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-cyan-50">
+
+  <!-- Header -->
+  <header class="bg-white shadow-lg">
+    <div class="max-w-4xl mx-auto px-4 py-6">
+      <div class="flex items-center justify-between">
+        <button onclick="goHome()" class="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
+          🏠 <span>Home</span>
+        </button>
+        <div class="text-center">
+          <h1 class="text-3xl font-bold text-gray-800">🧭 Route Calculator</h1>
+          <p class="text-gray-600">Find the best way!</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="goToMap()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+            🗺️ Map
+          </button>
+          <div id="offlineBadge" class="hidden bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+            Working offline
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main content -->
+  <main class="max-w-4xl mx-auto px-4 py-8">
+    
+    <!-- Difficulty selection -->
+    <div id="difficultySelection" class="mb-8">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">What route would you like to plan?</h2>
+      
+      <div class="grid md:grid-cols-2 gap-6">
+        <button onclick="setDifficulty('easy')" class="difficulty-btn bg-green-50 border-2 border-green-200 hover:border-green-400 rounded-xl p-6 text-left transition-all">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-3xl mb-2">🟢</div>
+              <h3 class="font-bold text-green-800 text-lg">Easy - SkyTrain Only</h3>
+              <p class="text-green-600 text-sm mt-1">Direct ride or with one transfer</p>
+              <div class="flex items-center gap-1 mt-2">
+                <div class="text-xs bg-green-200 px-2 py-1 rounded">3 lines</div>
+                <div class="text-xs bg-green-200 px-2 py-1 rounded">54 stations</div>
+              </div>
+            </div>
+            <div class="text-4xl">🚇</div>
+          </div>
+        </button>
+
+        <button onclick="setDifficulty('medium')" class="difficulty-btn bg-yellow-50 border-2 border-yellow-200 hover:border-yellow-400 rounded-xl p-6 text-left transition-all">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-3xl mb-2">🟡</div>
+              <h3 class="font-bold text-yellow-800 text-lg">Medium - With Buses</h3>
+              <p class="text-yellow-600 text-sm mt-1">SkyTrain + bus connections</p>
+              <div class="flex items-center gap-1 mt-2">
+                <div class="text-xs bg-yellow-200 px-2 py-1 rounded">3 lines</div>
+                <div class="text-xs bg-yellow-200 px-2 py-1 rounded">150+ buses</div>
+              </div>
+            </div>
+            <div class="text-4xl">🚌</div>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Station selection -->
+    <div id="stationSelection" class="hidden bg-white rounded-2xl shadow-lg p-6 mb-6">
+      <!-- From line filters -->
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-600 mb-3">Filter origin stations by line:</label>
+        <div id="fromLineFilters" class="flex flex-wrap gap-2">
+          <button class="line-filter active px-3 py-2 rounded-lg bg-gray-200 text-gray-800 text-sm" data-line="all">All</button>
+          <button class="line-filter px-3 py-2 rounded-lg expo-bg text-white text-sm" data-line="expo">Expo</button>
+          <button class="line-filter px-3 py-2 rounded-lg millennium-bg text-gray-800 text-sm" data-line="millennium">Millennium</button>
+          <button class="line-filter px-3 py-2 rounded-lg canada-bg text-white text-sm" data-line="canada">Canada</button>
+        </div>
+      </div>
+
+      <!-- From station -->
+      <div class="mb-6">
+        <label for="fromStation" class="block text-sm font-medium text-gray-600 mb-2">Starting station:</label>
+        <select id="fromStation" class="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none">
+          <option value="">Choose starting station...</option>
+        </select>
+        <div id="fromStationInfo" class="hidden mt-2 text-sm text-gray-600 bg-gray-50 p-2 rounded"></div>
+      </div>
+
+      <!-- To line filters -->
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-600 mb-3">Filter destination stations by line:</label>
+        <div id="toLineFilters" class="flex flex-wrap gap-2">
+          <button class="line-filter active px-3 py-2 rounded-lg bg-gray-200 text-gray-800 text-sm" data-line="all">All</button>
+          <button class="line-filter px-3 py-2 rounded-lg expo-bg text-white text-sm" data-line="expo">Expo</button>
+          <button class="line-filter px-3 py-2 rounded-lg millennium-bg text-gray-800 text-sm" data-line="millennium">Millennium</button>
+          <button class="line-filter px-3 py-2 rounded-lg canada-bg text-white text-sm" data-line="canada">Canada</button>
+        </div>
+      </div>
+
+      <!-- To station -->
+      <div class="mb-6">
+        <label for="toStation" class="block text-sm font-medium text-gray-600 mb-2">Destination station:</label>
+        <select id="toStation" class="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none">
+          <option value="">Choose destination station...</option>
+        </select>
+        <div id="toStationInfo" class="hidden mt-2 text-sm text-gray-600 bg-gray-50 p-2 rounded"></div>
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex gap-3">
+        <button id="calculateBtn" onclick="calculateRoute()" disabled class="disabled flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+          🔍 Calculate Route
+        </button>
+        <button onclick="resetSelection()" class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors">
+          🔄 Reset
+        </button>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div id="results" class="hidden">
+      <!-- Results will be displayed here -->
+    </div>
+
+    <!-- Map -->
+    <div id="mapContainer" class="hidden mt-8">
+      <div class="bg-white rounded-2xl shadow-lg p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-xl font-bold text-gray-800">🗺️ Route on Map</h3>
+          <button onclick="document.getElementById('mapContainer').classList.add('hidden')" class="text-gray-500 hover:text-gray-700">
+            ✕ Close
+          </button>
+        </div>
+        <div id="routeMap" style="height: 400px;" class="rounded-lg"></div>
+        <p class="text-xs text-gray-500 mt-2 text-center">Map shows approximate locations • © OpenStreetMap</p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-white p-6 mt-12">
+    <div class="max-w-4xl mx-auto text-center">
+      <h3 class="text-lg font-bold mb-2">🚇 Route Calculator - Vancouver SkyTrain</h3>
+      <p class="text-gray-300 text-sm mb-4">Calculate smart routes on the public transit network. All data stored locally.</p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div class="bg-gray-700 p-3 rounded-lg"><h4 class="font-medium mb-1">3 lines</h4><p class="text-gray-400">Expo, Millennium, Canada</p></div>
+        <div class="bg-gray-700 p-3 rounded-lg"><h4 class="font-medium mb-1">54 stations</h4><p class="text-gray-400">Across the metro</p></div>
+        <div class="bg-gray-700 p-3 rounded-lg"><h4 class="font-medium mb-1">Automated train</h4><p class="text-gray-400">Driverless</p></div>
+      </div>
+      <div class="mt-6 pt-4 border-t border-gray-600">
+        <p class="text-xs text-gray-400">2025 data • Source: TransLink</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    /* Navigation functions */
+    function goHome() {
+      window.location.href = './index.html';
+    }
+    
+    function goToMap() {
+      window.location.href = './map.html';
+    }
+    
+    function goToCalculator() {
+      window.location.href = './calculator.html';
+    }
+
+    /* Service Worker registration */
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(console.error));
+    }
+
+    /* Offline badge */
+    function updateOfflineBadge(){
+      const b = document.getElementById('offlineBadge');
+      if (!navigator.onLine) {
+        b.classList.remove('hidden');
+      } else {
+        b.classList.add('hidden');
+      }
+    }
+    window.addEventListener('online', updateOfflineBadge);
+    window.addEventListener('offline', updateOfflineBadge);
+    updateOfflineBadge();
+
+    // Station and line data
+    const stations = {
+      // Expo Line - main axis
+      'waterfront': {nameHe: 'Waterfront', nameEn: 'Waterfront', lines: ['expo', 'canada'], zone: 1, accessibility: true, transfers: ['canada'], branch: 'expo-main'},
+      'burrard': {nameHe: 'Burrard', nameEn: 'Burrard', lines: ['expo'], zone: 1, accessibility: true, transfers: [], branch: 'expo-main'},
+      'granville': {nameHe: 'Granville', nameEn: 'Granville', lines: ['expo'], zone: 1, accessibility: true, transfers: [], branch: 'expo-main'},
+      'stadium': {nameHe: 'Stadium–Chinatown', nameEn: 'Stadium–Chinatown', lines: ['expo'], zone: 1, accessibility: true, transfers: [], branch: 'expo-main'},
+      'main-street': {nameHe: 'Main Street', nameEn: 'Main Street–Science World', lines: ['expo'], zone: 1, accessibility: true, transfers: [], branch: 'expo-main'},
+      'commercial': {nameHe: 'Commercial–Broadway', nameEn: 'Commercial–Broadway', lines: ['expo', 'millennium'], zone: 1, accessibility: true, transfers: ['millennium'], branch: 'expo-main'},
+      'nanaimo': {nameHe: 'Nanaimo', nameEn: 'Nanaimo', lines: ['expo'], zone: 1, accessibility: true, transfers: [], branch: 'expo-main'},
+      '29th-ave': {nameHe: '29th Avenue', nameEn: '29th Avenue', lines: ['expo'], zone: 1, accessibility: true, transfers: [], branch: 'expo-main'},
+      'joyce': {nameHe: 'Joyce–Collingwood', nameEn: 'Joyce–Collingwood', lines: ['expo'], zone: 2, accessibility: true, transfers: [], branch: 'expo-main'},
+      'patterson': {nameHe: 'Patterson', nameEn: 'Patterson', lines: ['expo'], zone: 2, accessibility: true, transfers: [], branch: 'expo-main'},
+      'metrotown': {nameHe: 'Metrotown', nameEn: 'Metrotown', lines: ['expo'], zone: 2, accessibility: true, transfers: [], branch: 'expo-main'},
+      'royal-oak': {nameHe: 'Royal Oak', nameEn: 'Royal Oak', lines: ['expo'], zone: 2, accessibility: true, transfers: [], branch: 'expo-main'},
+      'edmonds': {nameHe: 'Edmonds', nameEn: 'Edmonds', lines: ['expo'], zone: 2, accessibility: true, transfers: [], branch: 'expo-main'},
+      '22nd-street': {nameHe: '22nd Street', nameEn: '22nd Street', lines: ['expo'], zone: 2, accessibility: true, transfers: [], branch: 'expo-main'},
+      'new-west': {nameHe: 'New Westminster', nameEn: 'New Westminster', lines: ['expo'], zone: 2, accessibility: true, transfers: [], branch: 'expo-main'},
+      'columbia': {nameHe: 'Columbia', nameEn: 'Columbia', lines: ['expo'], zone: 2, accessibility: true, transfers: [], branch: 'expo-main'},
+
+      // Expo Line - branch 1 (to King George)
+      'scott-road': {nameHe: 'Scott Road', nameEn: 'Scott Road', lines: ['expo'], zone: 2, accessibility: true, transfers: [], branch: 'expo-kinggeorge'},
+      'gateway': {nameHe: 'Gateway', nameEn: 'Gateway', lines: ['expo'], zone: 3, accessibility: true, transfers: [], branch: 'expo-kinggeorge'},
+      'surrey-central': {nameHe: 'Surrey Central', nameEn: 'Surrey Central', lines: ['expo'], zone: 3, accessibility: true, transfers: [], branch: 'expo-kinggeorge'},
+      'king-george': {nameHe: 'King George', nameEn: 'King George', lines: ['expo'], zone: 3, accessibility: true, transfers: [], branch: 'expo-kinggeorge'},
+
+      // Expo Line - branch 2 (to Lougheed)
+      'sapperton': {nameHe: 'Sapperton', nameEn: 'Sapperton', lines: ['expo'], zone: 2, accessibility: true, transfers: [], branch: 'expo-lougheed'},
+      'braid': {nameHe: 'Braid', nameEn: 'Braid', lines: ['expo'], zone: 2, accessibility: true, transfers: [], branch: 'expo-lougheed'},
+      'lougheed': {nameHe: 'Lougheed', nameEn: 'Lougheed Town Centre', lines: ['expo', 'millennium'], zone: 2, accessibility: true, transfers: ['millennium'], branch: 'expo-lougheed'},
+      'production-way': {nameHe: 'Production Way', nameEn: 'Production Way–University', lines: ['expo', 'millennium'], zone: 2, accessibility: true, transfers: ['millennium'], branch: 'expo-lougheed'},
+
+      // Millennium Line
+      'vcc-clark': {nameHe: 'VCC–Clark', nameEn: 'VCC–Clark', lines: ['millennium'], zone: 1, accessibility: true, transfers: [], branch: 'millennium-main'},
+      'renfrew': {nameHe: 'Renfrew', nameEn: 'Renfrew', lines: ['millennium'], zone: 1, accessibility: true, transfers: [], branch: 'millennium-main'},
+      'rupert': {nameHe: 'Rupert', nameEn: 'Rupert', lines: ['millennium'], zone: 2, accessibility: true, transfers: [], branch: 'millennium-main'},
+      'gilmore': {nameHe: 'Gilmore', nameEn: 'Gilmore', lines: ['millennium'], zone: 2, accessibility: true, transfers: [], branch: 'millennium-main'},
+      'brentwood': {nameHe: 'Brentwood', nameEn: 'Brentwood Town Centre', lines: ['millennium'], zone: 2, accessibility: true, transfers: [], branch: 'millennium-main'},
+      'holdom': {nameHe: 'Holdom', nameEn: 'Holdom', lines: ['millennium'], zone: 2, accessibility: true, transfers: [], branch: 'millennium-main'},
+      'sperling': {nameHe: 'Sperling', nameEn: 'Sperling–Burnaby Lake', lines: ['millennium'], zone: 2, accessibility: true, transfers: [], branch: 'millennium-main'},
+      'lake-city-way': {nameHe: 'Lake City Way', nameEn: 'Lake City Way', lines: ['millennium'], zone: 2, accessibility: true, transfers: [], branch: 'millennium-main'},
+      'burquitlam': {nameHe: 'Burquitlam', nameEn: 'Burquitlam', lines: ['millennium'], zone: 3, accessibility: true, transfers: [], branch: 'millennium-main'},
+      'moody-centre': {nameHe: 'Moody Centre', nameEn: 'Moody Centre', lines: ['millennium'], zone: 3, accessibility: true, transfers: [], branch: 'millennium-main'},
+      'inlet-centre': {nameHe: 'Inlet Centre', nameEn: 'Inlet Centre', lines: ['millennium'], zone: 3, accessibility: true, transfers: [], branch: 'millennium-main'},
+      'coquitlam-central': {nameHe: 'Coquitlam Central', nameEn: 'Coquitlam Central', lines: ['millennium'], zone: 3, accessibility: true, transfers: [], branch: 'millennium-main'},
+      'lincoln': {nameHe: 'Lincoln', nameEn: 'Lincoln', lines: ['millennium'], zone: 3, accessibility: true, transfers: [], branch: 'millennium-main'},
+      'lafarge-lake': {nameHe: 'Lafarge Lake', nameEn: 'Lafarge Lake–Douglas', lines: ['millennium'], zone: 3, accessibility: true, transfers: [], branch: 'millennium-main'},
+
+      // Canada Line - main
+      'vancouver-city-centre': {nameHe: 'Vancouver City Centre', nameEn: 'Vancouver City Centre', lines: ['canada'], zone: 1, accessibility: true, transfers: [], branch: 'canada-main'},
+      'yaletown': {nameHe: 'Yaletown', nameEn: 'Yaletown–Roundhouse', lines: ['canada'], zone: 1, accessibility: true, transfers: [], branch: 'canada-main'},
+      'olympic-village': {nameHe: 'Olympic Village', nameEn: 'Olympic Village', lines: ['canada'], zone: 1, accessibility: true, transfers: [], branch: 'canada-main'},
+      'broadway-city-hall': {nameHe: 'Broadway–City Hall', nameEn: 'Broadway–City Hall', lines: ['canada'], zone: 1, accessibility: true, transfers: [], branch: 'canada-main'},
+      'king-edward': {nameHe: 'King Edward', nameEn: 'King Edward', lines: ['canada'], zone: 1, accessibility: true, transfers: [], branch: 'canada-main'},
+      'oakridge': {nameHe: 'Oakridge', nameEn: 'Oakridge–41st Avenue', lines: ['canada'], zone: 1, accessibility: true, transfers: [], branch: 'canada-main'},
+      'langara': {nameHe: 'Langara', nameEn: 'Langara–49th Avenue', lines: ['canada'], zone: 2, accessibility: true, transfers: [], branch: 'canada-main'},
+      'marine-drive': {nameHe: 'Marine Drive', nameEn: 'Marine Drive', lines: ['canada'], zone: 2, accessibility: true, transfers: [], branch: 'canada-main'},
+      'bridgeport': {nameHe: 'Bridgeport', nameEn: 'Bridgeport', lines: ['canada'], zone: 2, accessibility: true, transfers: [], branch: 'canada-main'},
+      
+      // Canada Line - airport branch
+      'templeton': {nameHe: 'Templeton', nameEn: 'Templeton', lines: ['canada'], zone: 2, accessibility: true, transfers: [], branch: 'canada-airport'},
+      'sea-island-centre': {nameHe: 'Sea Island Centre', nameEn: 'Sea Island Centre', lines: ['canada'], zone: 2, accessibility: true, transfers: [], branch: 'canada-airport'},
+      'yvr-airport': {nameHe: 'YVR–Airport', nameEn: 'YVR–Airport', lines: ['canada'], zone: 2, accessibility: true, transfers: [], branch: 'canada-airport'},
+      
+      // Canada Line - Richmond branch
+      'aberdeen': {nameHe: 'Aberdeen', nameEn: 'Aberdeen', lines: ['canada'], zone: 2, accessibility: true, transfers: [], branch: 'canada-richmond'},
+      'lansdowne': {nameHe: 'Lansdowne', nameEn: 'Lansdowne', lines: ['canada'], zone: 2, accessibility: true, transfers: [], branch: 'canada-richmond'},
+      'richmond-brighouse': {nameHe: 'Richmond-Brighouse', nameEn: 'Richmond-Brighouse', lines: ['canada'], zone: 2, accessibility: true, transfers: [], branch: 'canada-richmond'}
+    };
+
+    // Station coordinates
+    const stationCoordinates = {
+      'waterfront': [49.2857, -123.1118],
+      'burrard': [49.2859, -123.1201],
+      'granville': [49.2834, -123.1163],
+      'stadium': [49.2794, -123.1094],
+      'main-street': [49.2732, -123.1003],
+      'commercial': [49.2623, -123.0687],
+      'nanaimo': [49.2480, -123.0558],
+      '29th-ave': [49.2441, -123.0459],
+      'joyce': [49.2383, -123.0316],
+      'patterson': [49.2299, -123.0124],
+      'metrotown': [49.2265, -122.9992],
+      'royal-oak': [49.2200, -122.9885],
+      'edmonds': [49.2124, -122.9593],
+      '22nd-street': [49.2002, -122.9491],
+      'new-west': [49.2016, -122.9129],
+      'columbia': [49.2045, -122.9060],
+      'scott-road': [49.2047, -122.8741],
+      'gateway': [49.1989, -122.8509],
+      'surrey-central': [49.1896, -122.8478],
+      'king-george': [49.1828, -122.8448],
+      'sapperton': [49.2245, -122.8897],
+      'braid': [49.2333, -122.8830],
+      'lougheed': [49.2486, -122.8971],
+      'production-way': [49.2533, -122.9186],
+      'vcc-clark': [49.2662, -123.0789],
+      'renfrew': [49.2589, -123.0453],
+      'rupert': [49.2609, -123.0330],
+      'gilmore': [49.2648, -123.0130],
+      'brentwood': [49.2663, -122.9985],
+      'holdom': [49.2640, -122.9823],
+      'sperling': [49.2597, -122.9636],
+      'lake-city-way': [49.2546, -122.9393],
+      'burquitlam': [49.2614, -122.8897],
+      'moody-centre': [49.2778, -122.8159],
+      'inlet-centre': [49.2972, -122.8273],
+      'coquitlam-central': [49.2739, -122.8007],
+      'lincoln': [49.2802, -122.7941],
+      'lafarge-lake': [49.2850, -122.7938],
+      'vancouver-city-centre': [49.2826, -123.1155],
+      'yaletown': [49.2750, -123.1221],
+      'olympic-village': [49.2663, -123.1156],
+      'broadway-city-hall': [49.2632, -123.1148],
+      'king-edward': [49.2496, -123.1158],
+      'oakridge': [49.2331, -123.1163],
+      'langara': [49.2269, -123.1161],
+      'marine-drive': [49.2109, -123.1165],
+      'bridgeport': [49.1902, -123.1261],
+      'templeton': [49.1948, -123.1384],
+      'sea-island-centre': [49.1943, -123.1836],
+      'yvr-airport': [49.1947, -123.1844],
+      'aberdeen': [49.1840, -123.1368],
+      'lansdowne': [49.1751, -123.1364],
+      'richmond-brighouse': [49.1667, -123.1364]
+    };
+
+    // Line information
+    const lineInfo = {
+      expo: { nameHe: 'Expo Line', nameEn: 'Expo Line', color: '#0060A9', colorClass: 'expo' },
+      millennium: { nameHe: 'Millennium Line', nameEn: 'Millennium Line', color: '#FED100', colorClass: 'millennium' },
+      canada: { nameHe: 'Canada Line', nameEn: 'Canada Line', color: '#009AC8', colorClass: 'canada' }
+    };
+
+    // Global variables
+    let currentDifficulty = null;
+    let currentFromLineFilter = 'all';
+    let currentToLineFilter = 'all';
+    let currentRoute = null;
+    let routeMap = null;
+
+    // Main algorithm - find routes
+    function findRouteImproved(fromId, toId) {
+      const fromStation = stations[fromId];
+      const toStation = stations[toId];
+      
+      console.log(`Finding route: ${fromStation.nameHe} → ${toStation.nameHe}`);
+      
+      // 1. Direct route
+      const directRoutes = findDirectRoutes(fromStation, toStation);
+      if (directRoutes.length > 0) {
+        console.log('Found direct route');
+        return directRoutes[0];
+      }
+
+      // 2. One transfer route
+      const oneTransferRoute = findOneTransferRoute(fromStation, toStation);
+      if (oneTransferRoute) {
+        console.log('Found one transfer route');
+        return oneTransferRoute;
+      }
+
+      // 3. Two transfers route
+      const twoTransferRoute = findTwoTransferRoute(fromStation, toStation);
+      if (twoTransferRoute) {
+        console.log('Found two transfer route');
+        return twoTransferRoute;
+      }
+
+      // 4. Fallback route
+      console.log('Creating fallback route');
+      return createFallbackRoute(fromStation, toStation);
+    }
+
+    function findDirectRoutes(fromStation, toStation) {
+      const directRoutes = [];
+      
+      const sharedLines = fromStation.lines.filter(line => toStation.lines.includes(line));
+      console.log('Shared lines:', sharedLines);
+      
+      sharedLines.forEach(line => {
+        directRoutes.push({
+          type: 'direct',
+          from: fromStation,
+          to: toStation,
+          line: lineInfo[line],
+          steps: 1,
+          distance: calculateDirectDistance(fromStation, toStation, line)
+        });
+      });
+      
+      return directRoutes;
+    }
+
+    function calculateDirectDistance(fromStation, toStation, lineKey) {
+      const zoneDiff = Math.abs(toStation.zone - fromStation.zone);
+      if (zoneDiff === 0) return 3;
+      if (zoneDiff === 1) return 7;
+      return 12;
+    }
+
+    function findOneTransferRoute(fromStation, toStation) {
+      console.log('Looking for one transfer route');
+      
+      const fromId = getStationId(fromStation);
+      const toId = getStationId(toStation);
+      
+      // All 50 edge cases
+      const specialCases = {
+        'scott-road-sapperton': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        'sapperton-scott-road': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        'scott-road-braid': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        'braid-scott-road': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        'scott-road-lougheed': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        'lougheed-scott-road': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        'scott-road-production-way': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        'production-way-scott-road': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        
+        'gateway-sapperton': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        'sapperton-gateway': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        'gateway-braid': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        'braid-gateway': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        'gateway-lougheed': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        'lougheed-gateway': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        'gateway-production-way': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        'production-way-gateway': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        
+        'surrey-central-sapperton': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        'sapperton-surrey-central': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        'surrey-central-braid': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        'braid-surrey-central': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        'surrey-central-lougheed': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        'lougheed-surrey-central': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        'surrey-central-production-way': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        'production-way-surrey-central': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        
+        'king-george-sapperton': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        'sapperton-king-george': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        'king-george-braid': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        'braid-king-george': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        'king-george-lougheed': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        'lougheed-king-george': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        'king-george-production-way': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        'production-way-king-george': { transfer: 'columbia', line1: 'expo', line2: 'expo' },
+        
+        'templeton-aberdeen': { transfer: 'bridgeport', line1: 'canada', line2: 'canada' },
+        'aberdeen-templeton': { transfer: 'bridgeport', line1: 'canada', line2: 'canada' },
+        'templeton-lansdowne': { transfer: 'bridgeport', line1: 'canada', line2: 'canada' },
+        'lansdowne-templeton': { transfer: 'bridgeport', line1: 'canada', line2: 'canada' },
+        'templeton-richmond-brighouse': { transfer: 'bridgeport', line1: 'canada', line2: 'canada' },
+        'richmond-brighouse-templeton': { transfer: 'bridgeport', line1: 'canada', line2: 'canada' },
+        
+        'sea-island-centre-aberdeen': { transfer: 'bridgeport', line1: 'canada', line2: 'canada' },
+        'aberdeen-sea-island-centre': { transfer: 'bridgeport', line1: 'canada', line2: 'canada' },
+        'sea-island-centre-lansdowne': { transfer: 'bridgeport', line1: 'canada', line2: 'canada' },
+        'lansdowne-sea-island-centre': { transfer: 'bridgeport', line1: 'canada', line2: 'canada' },
+        'sea-island-centre-richmond-brighouse': { transfer: 'bridgeport', line1: 'canada', line2: 'canada' },
+        'richmond-brighouse-sea-island-centre': { transfer: 'bridgeport', line1: 'canada', line2: 'canada' },
+        
+        'yvr-airport-aberdeen': { transfer: 'bridgeport', line1: 'canada', line2: 'canada' },
+        'aberdeen-yvr-airport': { transfer: 'bridgeport', line1: 'canada', line2: 'canada' },
+        'yvr-airport-lansdowne': { transfer: 'bridgeport', line1: 'canada', line2: 'canada' },
+        'lansdowne-yvr-airport': { transfer: 'bridgeport', line1: 'canada', line2: 'canada' },
+        'yvr-airport-richmond-brighouse': { transfer: 'bridgeport', line1: 'canada', line2: 'canada' },
+        'richmond-brighouse-yvr-airport': { transfer: 'bridgeport', line1: 'canada', line2: 'canada' }
+      };
+      
+      const routeKey = `${fromId}-${toId}`;
+      
+      if (specialCases[routeKey]) {
+        const specialCase = specialCases[routeKey];
+        const transferStation = stations[specialCase.transfer];
+        
+        if (transferStation) {
+          console.log(`✅ Known edge case: ${routeKey} via ${transferStation.nameHe}`);
+          return {
+            type: 'transfer',
+            from: fromStation,
+            to: toStation,
+            transfer: transferStation,
+            line1: lineInfo[specialCase.line1],
+            line2: lineInfo[specialCase.line2],
+            steps: 2,
+            distance: 8
+          };
+        }
+      }
+      
+      const allTransferStations = Object.keys(stations).filter(stationId => {
+        const station = stations[stationId];
+        return station.lines.length > 1 || isTransferStation(stationId);
+      });
+      
+      console.log('Potential transfer stations:', allTransferStations);
+      
+      let bestRoute = null;
+      let shortestDistance = Infinity;
+      
+      for (const transferId of allTransferStations) {
+        const transferStation = stations[transferId];
+        if (!transferStation) continue;
+        
+        const line1Options = fromStation.lines.filter(line => transferStation.lines.includes(line));
+        const line2Options = transferStation.lines.filter(line => toStation.lines.includes(line));
+        
+        if (line1Options.length > 0 && line2Options.length > 0) {
+          for (const line1 of line1Options) {
+            for (const line2 of line2Options) {
+              if (line1 === line2) continue;
+              
+              const distance1 = calculateDirectDistance(fromStation, transferStation, line1);
+              const distance2 = calculateDirectDistance(transferStation, toStation, line2);
+              const totalDistance = distance1 + distance2;
+              
+              if (totalDistance < shortestDistance) {
+                shortestDistance = totalDistance;
+                bestRoute = {
+                  type: 'transfer',
+                  from: fromStation,
+                  to: toStation,
+                  transfer: transferStation,
+                  line1: lineInfo[line1],
+                  line2: lineInfo[line2],
+                  steps: 2,
+                  distance: totalDistance
+                };
+              }
+            }
+          }
+        }
+      }
+      
+      return bestRoute;
+    }
+
+    function findTwoTransferRoute(fromStation, toStation) {
+      console.log('Looking for two transfer route');
+      
+      const transferStations = ['waterfront', 'commercial', 'lougheed', 'production-way'];
+      
+      for (const transfer1Id of transferStations) {
+        for (const transfer2Id of transferStations) {
+          if (transfer1Id === transfer2Id) continue;
+          
+          const transfer1 = stations[transfer1Id];
+          const transfer2 = stations[transfer2Id];
+          
+          const line1Options = fromStation.lines.filter(line => transfer1.lines.includes(line));
+          const line2Options = transfer1.lines.filter(line => transfer2.lines.includes(line));
+          const line3Options = transfer2.lines.filter(line => toStation.lines.includes(line));
+          
+          if (line1Options.length > 0 && line2Options.length > 0 && line3Options.length > 0) {
+            return {
+              type: 'double-transfer',
+              from: fromStation,
+              to: toStation,
+              transfer1: transfer1,
+              transfer2: transfer2,
+              line1: lineInfo[line1Options[0]],
+              line2: lineInfo[line2Options[0]],
+              line3: lineInfo[line3Options[0]],
+              steps: 3,
+              distance: 15
+            };
+          }
+        }
+      }
+      
+      return null;
+    }
+
+    function createFallbackRoute(fromStation, toStation) {
+      console.log('Creating fallback route');
+      
+      return {
+        type: 'fallback',
+        from: fromStation,
+        to: toStation,
+        steps: 4,
+        distance: 20,
+        note: `The route from ${fromStation.nameHe} to ${toStation.nameHe} is complex and may require multiple connections. We recommend checking TransLink website or asking at a station.`,
+        suggestion: 'Try searching for an alternative route or check the official TransLink website for more information.'
+      };
+    }
+
+    function getStationId(station) {
+      for (const [id, stationData] of Object.entries(stations)) {
+        if (stationData === station) {
+          return id;
+        }
+      }
+      return null;
+    }
+
+    function isTransferStation(stationId) {
+      const transferStations = ['waterfront', 'commercial', 'lougheed', 'production-way', 'columbia', 'bridgeport'];
+      return transferStations.includes(stationId);
+    }
+
+    // UI functions
+    function setDifficulty(level) {
+      currentDifficulty = level;
+      document.getElementById('difficultySelection').classList.add('hidden');
+      document.getElementById('stationSelection').classList.remove('hidden');
+      
+      populateStations();
+      setupLineFilters();
+    }
+
+    function setupLineFilters() {
+      document.querySelectorAll('#fromLineFilters .line-filter').forEach(filter => {
+        filter.addEventListener('click', function() {
+          document.querySelectorAll('#fromLineFilters .line-filter').forEach(f => f.classList.remove('active'));
+          this.classList.add('active');
+          currentFromLineFilter = this.dataset.line;
+          populateFromStations();
+        });
+      });
+      
+      document.querySelectorAll('#toLineFilters .line-filter').forEach(filter => {
+        filter.addEventListener('click', function() {
+          document.querySelectorAll('#toLineFilters .line-filter').forEach(f => f.classList.remove('active'));
+          this.classList.add('active');
+          currentToLineFilter = this.dataset.line;
+          populateToStations();
+        });
+      });
+    }
+
+    function populateStations() {
+      populateFromStations();
+      populateToStations();
+      
+      document.getElementById('fromStation').addEventListener('change', updateStationInfo);
+      document.getElementById('toStation').addEventListener('change', updateStationInfo);
+    }
+
+    function populateFromStations() {
+      const fromSelect = document.getElementById('fromStation');
+      fromSelect.innerHTML = '<option value="">Choose starting station...</option>';
+
+      let availableStations = Object.keys(stations);
+      
+      if (currentFromLineFilter !== 'all') {
+        availableStations = availableStations.filter(stationId => 
+          stations[stationId].lines.includes(currentFromLineFilter)
+        );
+      }
+
+      availableStations.sort((a, b) => stations[a].nameHe.localeCompare(stations[b].nameHe));
+
+      availableStations.forEach(stationId => {
+        const station = stations[stationId];
+        const option = document.createElement('option');
+        option.value = stationId;
+        
+        const linesInfo = station.lines.map(line => lineInfo[line].nameHe).join(', ');
+        option.textContent = `${station.nameHe} (${station.nameEn}) - ${linesInfo}`;
+        
+        fromSelect.appendChild(option);
+      });
+      
+      updateStationInfo();
+    }
+
+    function populateToStations() {
+      const toSelect = document.getElementById('toStation');
+      toSelect.innerHTML = '<option value="">Choose destination station...</option>';
+
+      let availableStations = Object.keys(stations);
+      
+      if (currentToLineFilter !== 'all') {
+        availableStations = availableStations.filter(stationId => 
+          stations[stationId].lines.includes(currentToLineFilter)
+        );
+      }
+
+      availableStations.sort((a, b) => stations[a].nameHe.localeCompare(stations[b].nameHe));
+
+      availableStations.forEach(stationId => {
+        const station = stations[stationId];
+        const option = document.createElement('option');
+        option.value = stationId;
+        
+        const linesInfo = station.lines.map(line => lineInfo[line].nameHe).join(', ');
+        option.textContent = `${station.nameHe} (${station.nameEn}) - ${linesInfo}`;
+        
+        toSelect.appendChild(option);
+      });
+      
+      updateStationInfo();
+    }
+
+    function updateStationInfo() {
+      const fromId = document.getElementById('fromStation').value;
+      const toId = document.getElementById('toStation').value;
+      const calculateBtn = document.getElementById('calculateBtn');
+      
+      updateStationInfoDisplay('fromStationInfo', fromId);
+      updateStationInfoDisplay('toStationInfo', toId);
+      
+      calculateBtn.disabled = !fromId || !toId;
+      calculateBtn.classList.toggle('disabled', !fromId || !toId);
+    }
+
+    function updateStationInfoDisplay(elementId, stationId) {
+      const infoDiv = document.getElementById(elementId);
+      if (!stationId) {
+        infoDiv.classList.add('hidden');
+        return;
+      }
+      
+      const station = stations[stationId];
+      const linesInfo = station.lines.map(line => {
+        const info = lineInfo[line];
+        return `<span class="inline-flex items-center gap-1">
+          <span class="w-3 h-3 rounded-full ${info.colorClass}-bg"></span>
+          ${info.nameHe}
+        </span>`;
+      }).join(' ');
+      
+      infoDiv.innerHTML = `Zone ${station.zone} • ${linesInfo}`;
+      infoDiv.classList.remove('hidden');
+    }
+
+    function resetSelection() {
+      document.getElementById('stationSelection').classList.add('hidden');
+      document.getElementById('difficultySelection').classList.remove('hidden');
+      document.getElementById('results').classList.add('hidden');
+      document.getElementById('mapContainer').classList.add('hidden');
+      
+      document.getElementById('fromStation').value = '';
+      document.getElementById('toStation').value = '';
+      currentFromLineFilter = 'all';
+      currentToLineFilter = 'all';
+      
+      document.querySelectorAll('#fromLineFilters .line-filter').forEach(f => f.classList.remove('active'));
+      document.querySelectorAll('#toLineFilters .line-filter').forEach(f => f.classList.remove('active'));
+      document.querySelector('#fromLineFilters .line-filter[data-line="all"]').classList.add('active');
+      document.querySelector('#toLineFilters .line-filter[data-line="all"]').classList.add('active');
+    }
+
+    function calculateRoute() {
+      const fromId = document.getElementById('fromStation').value;
+      const toId = document.getElementById('toStation').value;
+      
+      if (!fromId || !toId) return;
+      
+      if (fromId === toId) {
+        showError('You are already at this station! 😄');
+        return;
+      }
+
+      console.log('Starting route calculation:', fromId, '→', toId);
+      const route = findRouteImproved(fromId, toId);
+      console.log('Route found:', route);
+      currentRoute = route;
+      displayResults(route);
+    }
+
+    function showError(message) {
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = `
+        <div class="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+          <div class="text-4xl mb-4">⚠️</div>
+          <h3 class="text-xl font-bold text-red-800 mb-2">Oops!</h3>
+          <p class="text-red-700">${message}</p>
+        </div>
+      `;
+      resultsDiv.classList.remove('hidden');
+    }
+
+    function displayResults(route) {
+      const resultsDiv = document.getElementById('results');
+      
+      let html = '';
+      
+      if (route.type === 'direct') {
+        html = generateDirectRouteHTML(route);
+      } else if (route.type === 'transfer') {
+        html = generateTransferRouteHTML(route);
+      } else if (route.type === 'double-transfer') {
+        html = generateDoubleTransferRouteHTML(route);
+      } else if (route.type === 'fallback') {
+        html = generateFallbackRouteHTML(route);
+      }
+      
+      resultsDiv.innerHTML = html;
+      resultsDiv.classList.remove('hidden');
+      
+      resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function generateDirectRouteHTML(route) {
+      return `
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+          <div class="text-center mb-6">
+            <div class="text-4xl mb-2">🚇</div>
+            <h2 class="text-2xl font-bold text-green-600">Direct Route!</h2>
+            <p class="text-gray-600">Direct ride with no transfers</p>
+          </div>
+          
+          <div class="bg-gray-50 rounded-xl p-6 mb-6">
+            <div class="flex items-center justify-center gap-8">
+              <div class="text-center">
+                <div class="font-bold">${route.from.nameHe}</div>
+                <div class="text-sm text-gray-600">${route.from.nameEn}</div>
+                <div class="text-gray-600">Zone ${route.from.zone}</div>
+                <div class="text-gray-600">Origin</div>
+              </div>
+              <div class="flex-1 text-center">
+                <div class="w-4 h-4 rounded-full ${route.line.colorClass}-bg mx-auto mb-2"></div>
+                <div class="font-medium text-lg">${route.line.nameHe}</div>
+                <div class="text-sm text-gray-600">${route.line.nameEn}</div>
+              </div>
+              <div class="text-center">
+                <div class="font-bold">${route.to.nameHe}</div>
+                <div class="text-sm text-gray-600">${route.to.nameEn}</div>
+                <div class="text-gray-600">Zone ${route.to.zone}</div>
+                <div class="text-gray-600">Destination</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="route-step ${route.line.colorClass} step-animation bg-green-50 rounded-xl p-4">
+            <p class="text-lg font-medium text-blue-700">Take ${route.line.nameHe} <span class="inline-block w-4 h-4 rounded-full ${route.line.colorClass}-bg mx-1"></span> from ${route.from.nameHe} to ${route.to.nameHe} 🎯</p>
+          </div>
+          
+          ${generateRouteInfo(route)}
+          
+          <div class="mt-6 text-center">
+            <button onclick="showRouteOnMap()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-medium">
+              🗺️ Show on Map
+            </button>
+          </div>
+        </div>`;
+    }
+
+    function generateTransferRouteHTML(route) {
+      return `
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+          <div class="text-center mb-6">
+            <div class="text-4xl mb-2">🔄</div>
+            <h2 class="text-2xl font-bold text-blue-600">Route with One Transfer</h2>
+            <p class="text-gray-600">Ride with one connection</p>
+          </div>
+          
+          <div class="bg-gray-50 rounded-xl p-6 mb-6">
+            <div class="grid grid-cols-3 items-center gap-4 text-center">
+              <div>
+                <div class="font-bold">${route.from.nameHe}</div>
+                <div class="text-sm text-gray-600">${route.from.nameEn}</div>
+                <div class="w-4 h-4 rounded-full ${route.line1.colorClass}-bg mx-auto mt-2"></div>
+              </div>
+              <div>
+                <div class="text-lg mb-1">🔄</div>
+                <div class="font-medium text-blue-600">${route.transfer.nameHe}</div>
+                <div class="text-sm text-gray-500">Transfer station</div>
+              </div>
+              <div>
+                <div class="font-bold">${route.to.nameHe}</div>
+                <div class="text-sm text-gray-600">${route.to.nameEn}</div>
+                <div class="w-4 h-4 rounded-full ${route.line2.colorClass}-bg mx-auto mt-2"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="space-y-4">
+            <div class="route-step ${route.line1.colorClass} step-animation bg-green-50 rounded-xl p-4">
+              <p class="text-lg font-medium text-blue-700">Take ${route.line1.nameHe} <span class="inline-block w-4 h-4 rounded-full ${route.line1.colorClass}-bg mx-1"></span> from ${route.from.nameHe} to ${route.transfer.nameHe} 🚇</p>
+            </div>
+            <div class="route-step transfer step-animation bg-yellow-50 rounded-xl p-4">
+              <p class="text-lg font-medium text-orange-600">Transfer at ${route.transfer.nameHe} 🔄</p>
+            </div>
+            <div class="route-step ${route.line2.colorClass} step-animation bg-green-50 rounded-xl p-4">
+              <p class="text-lg font-medium text-blue-700">Take ${route.line2.nameHe} <span class="inline-block w-4 h-4 rounded-full ${route.line2.colorClass}-bg mx-1"></span> from ${route.transfer.nameHe} to ${route.to.nameHe} 🎯</p>
+            </div>
+          </div>
+          
+          ${generateRouteInfo(route)}
+          
+          <div class="mt-6 text-center">
+            <button onclick="showRouteOnMap()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-medium">
+              🗺️ Show on Map
+            </button>
+          </div>
+        </div>`;
+    }
+
+    function generateDoubleTransferRouteHTML(route) {
+      return `
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+          <div class="text-center mb-6">
+            <div class="text-4xl mb-2">🎯</div>
+            <h2 class="text-2xl font-bold text-purple-600">Advanced Route</h2>
+            <p class="text-gray-600">Ride with two transfers</p>
+          </div>
+          
+          <div class="space-y-4">
+            <div class="route-step ${route.line1.colorClass} step-animation bg-green-50 rounded-xl p-4">
+              <p class="text-base font-medium text-blue-700">Take ${route.line1.nameHe} <span class="inline-block w-4 h-4 rounded-full ${route.line1.colorClass}-bg mx-1"></span> from ${route.from.nameHe} to ${route.transfer1.nameHe}</p>
+            </div>
+            <div class="route-step transfer step-animation bg-yellow-50 rounded-xl p-4">
+              <p class="text-base font-medium text-orange-600">Transfer at ${route.transfer1.nameHe} 🔄</p>
+            </div>
+            <div class="route-step ${route.line2.colorClass} step-animation bg-green-50 rounded-xl p-4">
+              <p class="text-base font-medium text-blue-700">Take ${route.line2.nameHe} <span class="inline-block w-4 h-4 rounded-full ${route.line2.colorClass}-bg mx-1"></span> from ${route.transfer1.nameHe} to ${route.transfer2.nameHe}</p>
+            </div>
+            <div class="route-step transfer step-animation bg-yellow-50 rounded-xl p-4">
+              <p class="text-base font-medium text-orange-600">Transfer at ${route.transfer2.nameHe} 🔄</p>
+            </div>
+            <div class="route-step ${route.line3.colorClass} step-animation bg-green-50 rounded-xl p-4">
+              <p class="text-base font-medium text-blue-700">Take ${route.line3.nameHe} <span class="inline-block w-4 h-4 rounded-full ${route.line3.colorClass}-bg mx-1"></span> from ${route.transfer2.nameHe} to ${route.to.nameHe} 🎯</p>
+            </div>
+          </div>
+          
+          ${generateRouteInfo(route)}
+          
+          <div class="mt-6 text-center">
+            <button onclick="showRouteOnMap()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-medium">
+              🗺️ Show on Map
+            </button>
+          </div>
+        </div>`;
+    }
+
+    function generateFallbackRouteHTML(route) {
+      return `
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+          <div class="text-center mb-6">
+            <div class="text-4xl mb-2">🤔</div>
+            <h2 class="text-2xl font-bold text-purple-600">Complex but Possible Route</h2>
+            <p class="text-gray-600">We found a challenge - but there's a solution!</p>
+          </div>
+          
+          <div class="bg-purple-50 rounded-xl p-6 mb-6">
+            <p class="text-purple-800 font-medium text-center">
+              ${route.note ? route.note : `The route from ${route.from.nameHe} to ${route.to.nameHe} is complex and may require multiple connections.`}
+            </p>
+          </div>
+          
+          ${generateRouteInfo(route)}
+          
+          <div class="bg-blue-50 rounded-xl p-4 mt-6">
+            <h4 class="font-bold text-blue-800 mb-2">💡 Solutions:</h4>
+            <ul class="text-blue-700 space-y-1 text-sm">
+              <li>• Check TransLink official website for updated route</li>
+              <li>• Ask at the nearest station</li>
+              <li>• Consider traveling via a central transfer station like Commercial-Broadway</li>
+              <li>• Maybe look for closer stations to your destination</li>
+            </ul>
+          </div>
+        </div>`;
+    }
+
+    function generateRouteInfo(route) {
+      const estimatedTime = estimateTime(route);
+      const difficulty = getDifficultyLevel(route);
+      
+      return `
+        <div class="bg-blue-50 rounded-xl p-6 mt-6">
+          <div class="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <div class="text-2xl font-bold text-blue-600">${estimatedTime}</div>
+              <div class="text-sm text-blue-700">minutes</div>
+            </div>
+            <div>
+              <div class="text-2xl font-bold text-blue-600">${route.steps}</div>
+              <div class="text-sm text-blue-700">steps</div>
+            </div>
+            <div>
+              <div class="text-lg font-bold text-blue-600">${difficulty}</div>
+              <div class="text-sm text-blue-700">difficulty</div>
+            </div>
+          </div>
+          
+          <div class="text-xs text-center text-gray-500 mt-3 bg-yellow-50 p-2 rounded">
+            💡 Times include travel, stops and transfers
+          </div>
+        </div>
+      `;
+    }
+
+    function estimateTime(route) {
+      let totalMinutes = 0;
+      
+      const timePerStation = {
+        'expo': 2.1,
+        'millennium': 1.8,
+        'canada': 2.3
+      };
+      
+      const transferTimes = {
+        'waterfront': 6,
+        'commercial': 5,
+        'lougheed': 4,
+        'production-way': 4,
+        'bridgeport': 5,
+        'columbia': 4,
+        'default': 4
+      };
+
+      if (route.type === 'direct') {
+        const lineKey = route.line.nameEn.toLowerCase().includes('expo') ? 'expo' : 
+                       route.line.nameEn.toLowerCase().includes('millennium') ? 'millennium' : 'canada';
+        
+        const distance = route.distance || estimateDirectDistance(route);
+        totalMinutes = distance * timePerStation[lineKey] + 2;
+        
+      } else if (route.type === 'transfer') {
+        const line1Key = route.line1.nameEn.toLowerCase().includes('expo') ? 'expo' : 
+                        route.line1.nameEn.toLowerCase().includes('millennium') ? 'millennium' : 'canada';
+        const line2Key = route.line2.nameEn.toLowerCase().includes('expo') ? 'expo' : 
+                        route.line2.nameEn.toLowerCase().includes('millennium') ? 'millennium' : 'canada';
+        
+        const segment1Distance = route.segment1Distance || 8;
+        const segment2Distance = route.segment2Distance || 6;
+        
+        const segment1Time = segment1Distance * timePerStation[line1Key];
+        const segment2Time = segment2Distance * timePerStation[line2Key];
+        const transferId = getStationId(route.transfer);
+        const transferTime = transferTimes[transferId] || transferTimes['default'];
+        
+        totalMinutes = segment1Time + transferTime + segment2Time + 2;
+        
+      } else if (route.type === 'double-transfer') {
+        const line1Key = route.line1.nameEn.toLowerCase().includes('expo') ? 'expo' : 
+                        route.line1.nameEn.toLowerCase().includes('millennium') ? 'millennium' : 'canada';
+        const line2Key = route.line2.nameEn.toLowerCase().includes('expo') ? 'expo' : 
+                        route.line2.nameEn.toLowerCase().includes('millennium') ? 'millennium' : 'canada';
+        const line3Key = route.line3.nameEn.toLowerCase().includes('expo') ? 'expo' : 
+                        route.line3.nameEn.toLowerCase().includes('millennium') ? 'millennium' : 'canada';
+        
+        const segment1Time = 6 * timePerStation[line1Key];
+        const segment2Time = 4 * timePerStation[line2Key]; 
+        const segment3Time = 5 * timePerStation[line3Key];
+        
+        const transfer1Id = getStationId(route.transfer1);
+        const transfer2Id = getStationId(route.transfer2);
+        const transfer1Time = transferTimes[transfer1Id] || transferTimes['default'];
+        const transfer2Time = transferTimes[transfer2Id] || transferTimes['default'];
+        
+        totalMinutes = segment1Time + transfer1Time + segment2Time + transfer2Time + segment3Time + 3;
+        
+      } else {
+        totalMinutes = 35;
+      }
+      
+      return Math.round(totalMinutes);
+    }
+
+    function estimateDirectDistance(route) {
+      const zoneDiff = Math.abs((route.to.zone || 2) - (route.from.zone || 1));
+      
+      if (zoneDiff === 0) return 3;
+      if (zoneDiff === 1) return 7;
+      return 12;
+    }
+
+    function getDifficultyLevel(route) {
+      if (route.steps === 1) return 'Easy ⭐';
+      if (route.steps === 2) return 'Medium ⭐⭐';
+      if (route.steps === 3) return 'Challenging ⭐⭐⭐';
+      return 'Complex ⭐⭐⭐⭐';
+    }
+
+    // Map functions
+    function initMap() {
+      if (routeMap) {
+        routeMap.remove();
+      }
+      
+      routeMap = L.map('routeMap').setView([49.2827, -123.1207], 11);
+      
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(routeMap);
+      
+      return routeMap;
+    }
+
+    function showRouteOnMap() {
+      if (!currentRoute) return;
+      
+      document.getElementById('mapContainer').classList.remove('hidden');
+      
+      setTimeout(() => {
+        const map = initMap();
+        plotRouteOnMap(map, currentRoute);
+        
+        document.getElementById('mapContainer').scrollIntoView({
+          behavior: 'smooth', 
+          block: 'start'
+        });
+      }, 100);
+    }
+
+    function plotRouteOnMap(map, route) {
+      const getStationCoords = (station) => {
+        if (!station) return null;
+        
+        const stationId = Object.keys(stations).find(key => stations[key] === station);
+        return stationId ? stationCoordinates[stationId] : null;
+      };
+
+      const fromCoords = getStationCoords(route.from);
+      const toCoords = getStationCoords(route.to);
+      
+      if (!fromCoords || !toCoords) {
+        console.error('Could not find coordinates for stations');
+        return;
+      }
+
+      const allMarkers = [];
+
+      const fromMarker = L.marker(fromCoords, {
+        icon: L.divIcon({
+          className: 'custom-marker',
+          html: '<div style="background-color: #22c55e; color: white; border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">🚀</div>',
+          iconSize: [25, 25],
+          iconAnchor: [12, 12]
+        })
+      })
+        .addTo(map)
+        .bindPopup(`
+          <div class="text-center">
+            <h3 class="font-bold">${route.from.nameHe}</h3>
+            <p class="text-sm text-gray-600">${route.from.nameEn}</p>
+            <p class="text-xs text-green-600 font-medium">🚀 Starting station</p>
+          </div>
+        `);
+      allMarkers.push(fromMarker);
+
+      const toMarker = L.marker(toCoords, {
+        icon: L.divIcon({
+          className: 'custom-marker',
+          html: '<div style="background-color: #ef4444; color: white; border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">🎯</div>',
+          iconSize: [25, 25],
+          iconAnchor: [12, 12]
+        })
+      })
+        .addTo(map)
+        .bindPopup(`
+          <div class="text-center">
+            <h3 class="font-bold">${route.to.nameHe}</h3>
+            <p class="text-sm text-gray-600">${route.to.nameEn}</p>
+            <p class="text-xs text-red-600 font-medium">🎯 Destination station</p>
+          </div>
+        `);
+      allMarkers.push(toMarker);
+
+      const routeCoords = [fromCoords];
+
+      if (route.transfer) {
+        const transferCoords = getStationCoords(route.transfer);
+        if (transferCoords) {
+          const transferMarker = L.marker(transferCoords, {
+            icon: L.divIcon({
+              className: 'custom-marker',
+              html: '<div style="background-color: #3b82f6; color: white; border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">🔄</div>',
+              iconSize: [25, 25],
+              iconAnchor: [12, 12]
+            })
+          })
+            .addTo(map)
+            .bindPopup(`
+              <div class="text-center">
+                <h3 class="font-bold">${route.transfer.nameHe}</h3>
+                <p class="text-sm text-gray-600">${route.transfer.nameEn}</p>
+                <p class="text-xs text-blue-600 font-medium">🔄 Transfer station</p>
+                <p class="text-xs text-gray-500 mt-1">Transfer here between ${route.line1.nameHe} and ${route.line2.nameHe}</p>
+              </div>
+            `);
+          allMarkers.push(transferMarker);
+          routeCoords.push(transferCoords);
+        }
+      }
+
+      if (route.transfer1 && route.transfer2) {
+        const transfer1Coords = getStationCoords(route.transfer1);
+        const transfer2Coords = getStationCoords(route.transfer2);
+        
+        if (transfer1Coords && transfer2Coords) {
+          const transfer1Marker = L.marker(transfer1Coords, {
+            icon: L.divIcon({
+              className: 'custom-marker',
+              html: '<div style="background-color: #8b5cf6; color: white; border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">1️⃣</div>',
+              iconSize: [25, 25],
+              iconAnchor: [12, 12]
+            })
+          }).addTo(map);
+          allMarkers.push(transfer1Marker);
+          
+          const transfer2Marker = L.marker(transfer2Coords, {
+            icon: L.divIcon({
+              className: 'custom-marker',
+              html: '<div style="background-color: #8b5cf6; color: white; border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">2️⃣</div>',
+              iconSize: [25, 25],
+              iconAnchor: [12, 12]
+            })
+          }).addTo(map);
+          allMarkers.push(transfer2Marker);
+          
+          routeCoords.push(transfer1Coords, transfer2Coords);
+        }
+      }
+
+      routeCoords.push(toCoords);
+
+      if (routeCoords.length > 1) {
+        const routeLine = L.polyline(routeCoords, {
+          color: route.line1 ? route.line1.color : '#666666',
+          weight: 4,
+          opacity: 0.7,
+          dashArray: route.type === 'fallback' ? '10, 10' : null
+        }).addTo(map);
+        
+        map.fitBounds(routeLine.getBounds(), { padding: [20, 20] });
+      }
+
+      map._routeMarkers = allMarkers;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Route calculator loaded successfully');
+    });
+
+  </script>
+
+</body>
+</html>
